@@ -16,6 +16,7 @@ use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Entity\Schema\EntitySchemaProviderInterface;
+use Drupal\simpletest\RandomGeneratorTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
@@ -40,6 +41,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   use AssertLegacyTrait;
   #use AssertContentTrait;
   use LoggerTrait;
+  use RandomGeneratorTrait;
 
   /**
    * Implicitly TRUE by default, but MUST be TRUE for kernel tests.
@@ -780,7 +782,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'dieOnFail',
       'kernel',
       'configImporter',
-      'randomGenerator',
       // @see \Drupal\simpletest\TestBase::prepareEnvironment()
       'public_files_directory',
       'private_files_directory',
