@@ -471,24 +471,19 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   /**
    * Installs default configuration for a given list of modules.
    *
-   * @param array $modules
+   * @param string|array $modules
    *   A list of modules for which to install default configuration.
    *
-   * @throws \RuntimeException
-   *   Thrown when any module listed in $modules is not enabled.
+   * @throws \LogicException
+   *   If any module listed in $modules is not enabled.
    */
-  protected function installConfig(array $modules) {
-    foreach ($modules as $module) {
+  protected function installConfig($modules) {
+    foreach ((array) $modules as $module) {
       if (!$this->container->get('module_handler')->moduleExists($module)) {
-        throw new \RuntimeException(format_string("'@module' module is not enabled.", array(
-          '@module' => $module,
-        )));
+        throw new \LogicException("$module module is not enabled.");
       }
-      \Drupal::service('config.installer')->installDefaultConfig('module', $module);
+      $this->container->get('config.installer')->installDefaultConfig('module', $module);
     }
-    $this->pass(format_string('Installed default config: %modules.', array(
-      '%modules' => implode(', ', $modules),
-    )));
   }
 
   /**
@@ -499,9 +494,8 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * @param string|array $tables
    *   The name or an array of the names of the tables to install.
    *
-   * @throws \RuntimeException
-   *   Thrown when $module is not enabled or when the table schema cannot be
-   *   found in the module specified.
+   * @throws \LogicException
+   *   If $module is not enabled or the table schema cannot be found.
    */
   protected function installSchema($module, $tables) {
     // drupal_get_schema_unprocessed() is technically able to install a schema
@@ -510,18 +504,13 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // behavior and non-reproducible test failures, we only allow the schema of
     // explicitly loaded/enabled modules to be installed.
     if (!$this->container->get('module_handler')->moduleExists($module)) {
-      throw new \RuntimeException(format_string("'@module' module is not enabled.", array(
-        '@module' => $module,
-      )));
+      throw new \LogicException("$module module is not enabled.");
     }
     $tables = (array) $tables;
     foreach ($tables as $table) {
       $schema = drupal_get_schema_unprocessed($module, $table);
       if (empty($schema)) {
-        throw new \RuntimeException(format_string("Unknown '@table' table schema in '@module' module.", array(
-          '@module' => $module,
-          '@table' => $table,
-        )));
+        throw new \LogicException("$module module does not define a schema for table '$table'.");
       }
       $this->container->get('database')->schema()->createTable($table, $schema);
     }
@@ -529,10 +518,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // would not know of/return the schema otherwise.
     // @todo Refactor Schema API to make this obsolete.
     drupal_get_schema(NULL, TRUE);
-    $this->pass(format_string('Installed %module tables: %tables.', array(
-      '%tables' => '{' . implode('}, {', $tables) . '}',
-      '%module' => $module,
-    )));
   }
 
   /**
@@ -541,8 +526,8 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * @param string $entity_type_id
    *   The ID of the entity type.
    *
-   * @throws \RuntimeException
-   *   Thrown when the entity type does not support automatic schema installation.
+   * @throws \LogicException
+   *   If the entity type does not support automatic schema installation.
    */
   protected function installEntitySchema($entity_type_id) {
     /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
@@ -556,16 +541,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       foreach ($schema as $table_name => $table_schema) {
         $schema_handler->createTable($table_name, $table_schema);
       }
-
-      $this->pass(String::format('Installed entity type tables for the %entity_type entity type: %tables', array(
-        '%entity_type' => $entity_type_id,
-        '%tables' => '{' . implode('}, {', array_keys($schema)) . '}',
-      )));
     }
     else {
-      throw new \RuntimeException(String::format('Entity type %entity_type does not support automatic schema installation.', array(
-        '%entity-type' => $entity_type_id,
-      )));
+      throw new \LogicException("Entity type '$entity_type_id' does not support automatic schema installation.");
     }
   }
 
@@ -578,7 +556,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    *   The new modules are only added to the active module list and loaded.
    *
    * @throws \LogicException
-   *   If a module is already enabled or is not be enabled after enabling it.
+   *   If any module in $modules is already enabled.
+   * @throws \RuntimeException
+   *   If a module is not enabled after enabling it.
    */
   protected function enableModules(array $modules) {
     // Set the list of modules in the extension handler.
@@ -610,7 +590,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $module_handler->reload();
     foreach ($modules as $module) {
       if (!$module_handler->moduleExists($module)) {
-        throw new \LogicException("$module module is not enabled after enabling it.");
+        throw new \RuntimeException("$module module is not enabled after enabling it.");
       }
     }
   }
@@ -623,6 +603,11 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    *   multiple modules have to be specified with dependent modules first.
    *   Code of previously active modules is still loaded. The modules are only
    *   removed from the active module list.
+   *
+   * @throws \LogicException
+   *   If any module in $modules is already disabled.
+   * @throws \RuntimeException
+   *   If a module is not disabled after disabling it.
    */
   protected function disableModules(array $modules) {
     // Unset the list of modules in the extension handler.
@@ -630,6 +615,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $extensions = $module_handler->getModuleList();
     $extension_config = $this->container->get('config.factory')->get('core.extension');
     foreach ($modules as $module) {
+      if (!$module_handler->moduleExists($module)) {
+        throw new \LogicException("$module module cannot be disabled because it is not enabled.");
+      }
       unset($extensions[$module]);
       $extension_config->clear('module.' . $module);
     }
@@ -644,9 +632,11 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // no longer the $module_handler instance from above.
     $module_handler = $this->container->get('module_handler');
     $module_handler->reload();
-    $this->pass(format_string('Disabled modules: %modules.', array(
-      '%modules' => implode(', ', $modules),
-    )));
+    foreach ($modules as $module) {
+      if ($module_handler->moduleExists($module)) {
+        throw new \RuntimeException("$module module is not disabled after disabling it.");
+      }
+    }
   }
 
   /**
