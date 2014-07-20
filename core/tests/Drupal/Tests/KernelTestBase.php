@@ -15,10 +15,10 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Drupal\Core\DrupalKernel;
+use Drupal\Core\Entity\Schema\EntitySchemaProviderInterface;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\Entity\Schema\EntitySchemaProviderInterface;
 use Drupal\simpletest\RandomGeneratorTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
@@ -32,12 +32,20 @@ use Symfony\Component\HttpFoundation\Request;
  * entire environment is initially empty. Drupal runs in a minimal mocked
  * environment, comparable to the one in the early installer.
  *
+ * Unlike \Drupal\Tests\UnitTestCase, modules specified in the $modules
+ * property are automatically added to the service container for each test.
  * The module/hook system is functional and operates on a fixed module list.
  * Additional modules needed in a test may be loaded and added to the fixed
  * module list.
  *
+ * Unlike \Drupal\simpletest\WebTestBase, the modules are only loaded, but not
+ * installed. Modules need to be installed manually, if needed.
+ *
  * @see \Drupal\Tests\KernelTestBase::$modules
  * @see \Drupal\Tests\KernelTestBase::enableModules()
+ *
+ * @todo Extend ::setRequirementsFromAnnotation() and ::checkRequirements() to
+ *   account for '@requires module'.
  */
 abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements ServiceProviderInterface, LoggerInterface {
 
@@ -76,12 +84,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * this class, may specify individual lists of modules to enable by setting
    * this property. The values of all properties in all classes in the hierarchy
    * are merged.
-   *
-   * Unlike \Drupal\Tests\UnitTestCase, modules specified in the $modules
-   * property are automatically added to the service container for each test.
-   *
-   * Unlike \Drupal\simpletest\WebTestBase, the modules are only loaded, but not
-   * installed. Modules need to be installed manually, if needed.
    *
    * @see \Drupal\Tests\KernelTestBase::enableModules()
    * @see \Drupal\Tests\KernelTestBase::setUp()
@@ -316,6 +318,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * @return \Drupal\Core\Extension\Extension[]
    *   Extension objects for $modules, keyed by module name.
    *
+   * @throws \PHPUnit_Framework_Exception
+   *   If a module is not available.
+   *
    * @see \Drupal\Tests\KernelTestBase::enableModules()
    * @see \Drupal\Core\Extension\ModuleHandler::add()
    */
@@ -325,6 +330,10 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $discovery->setProfileDirectories(array());
     $list = $discovery->scan('module');
     foreach ($modules as $name) {
+      // @todo Move into helper method? cf. enableModules()
+      if (!isset($list[$name])) {
+        throw new \PHPUnit_Framework_Exception("Unavailable module: '$name'. For optional module dependencies, annotate the test class with '@requires module $name'.");
+      }
       $extensions[$name] = $list[$name];
     }
     return $extensions;
@@ -797,6 +806,8 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Add '@expectedLogSeverity CONST' + '@expectedLogMessage string'.
    */
   public function log($level, $message, array $context = array()) {
     if ($level <= WATCHDOG_WARNING) {
@@ -805,6 +816,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       if (!empty($message_placeholders)) {
         $message = strtr($message, $message_placeholders);
       }
+      // @todo Unnecessary?
       if (!isset($context['backtrace'])) {
         $context['backtrace'][0]['file'] = __FILE__;
         $context['backtrace'][0]['line'] = __LINE__;
