@@ -13,9 +13,7 @@ namespace Drupal\Tests;
  */
 class KernelTestBaseTest extends KernelTestBase {
 
-//  protected function setUp() {
-//    parent::setUp();
-//  }
+  public static $modules = array('user');
 
   /**
    * @covers ::setUpBeforeClass
@@ -106,6 +104,21 @@ class KernelTestBaseTest extends KernelTestBase {
     $this->assertInstanceOf('Symfony\Component\HttpFoundation\Request', $new_request);
     $this->assertSame($new_request, \Drupal::request());
     $this->assertSame($request, $new_request);
+  }
+
+  /**
+   * @covers ::getCompiledContainerBuilder
+   */
+  public function testCompiledContainer() {
+    $this->installConfig('user');
+  }
+
+  /**
+   * @covers ::getCompiledContainerBuilder
+   * @depends testCompiledContainer
+   */
+  public function testCompiledContainerIsDestructed() {
+    $this->installConfig('user');
   }
 
   /**

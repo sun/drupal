@@ -63,11 +63,13 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
   protected $backupStaticAttributes = TRUE;
   protected $backupStaticAttributesBlacklist = array(
-    'Drupal' => array('container'),
+    // Ignore static discovery/parser caches to speed up tests.
     'Drupal\Component\Discovery\YamlDiscovery' => array('parsedFiles'),
     'Drupal\Core\DependencyInjection\YamlFileLoader' => array('yaml'),
     'Drupal\Core\Extension\ExtensionDiscovery' => array('files'),
     'Drupal\Core\Extension\InfoParser' => array('parsedInfos'),
+    // Drupal::$container cannot be serialized.
+    'Drupal' => array('container'),
   );
 
   protected $classLoader;
@@ -171,16 +173,36 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
     $modules = self::getModulesToEnable(get_class($this));
 
+    // Prepare a precompiled container for all tests of this class.
+    // Substantially improves the performance of setUp() per test (because
+    // ContainerBuilder::compile() is very expensive), which in turn encourages
+    // smaller test methods.
+    // Theoretically, this is a setUpBeforeClass() operation, but object scope
+    // is required in order to inject $this test class instance as a service
+    // provider into DrupalKernel (see above).
     // Variant #1: Actually compiled + dumped Container class.
-    //$this->setCompiledContainer($modules);
+    //$container = $this->getCompiledContainer($modules);
     // Variant #2: Clone of a compiled, empty ContainerBuilder instance.
-    $this->setCompiledContainerBuilder($modules);
+    $container = $this->getCompiledContainerBuilder($modules);
 
     // Bootstrap a kernel. Don't use createFromRequest to retain Settings.
     $kernel = new DrupalKernel('testing', $this->classLoader, FALSE);
     $kernel->setSitePath($this->siteDirectory);
-    $kernel->setContainer($this->container);
+    if (isset($container)) {
+      $kernel->setContainer($container);
+      unset($container);
+    }
+    elseif ($modules && $extensions = $this->getExtensionsForModules($modules)) {
+      $kernel->updateModules($extensions, $extensions);
+    }
     $kernel->boot();
+
+    // register() is only called if a new container was built/compiled.
+    $this->container = $kernel->getContainer();
+
+    if ($modules) {
+      $this->container->get('module_handler')->loadAll();
+    }
 
     // Add a master request to the stack.
     $request = Request::create('/');
@@ -193,13 +215,11 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // \Drupal\Core\Config\ConfigInstaller::installDefaultConfig() to work.
     // Write directly to active storage to avoid early instantiation of
     // the event dispatcher which can prevent modules from registering events.
-    if (!$modules) {
-      $this->container->get('config.storage')->write('core.extension', array(
-        'module' => array(),
-        'theme' => array(),
-        'disabled' => array('theme' => array()),
-      ));
-    }
+    $this->container->get('config.storage')->write('core.extension', array(
+      'module' => array_fill_keys($modules, 0),
+      'theme' => array(),
+      'disabled' => array('theme' => array()),
+    ));
 
     // Tests based on this class are entitled to use Drupal's File and
     // StreamWrapper APIs.
@@ -223,7 +243,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * - Each dumped Container is loaded separately into memory.
    * - Initial PhpDumper invocation (once per class) is slow.
    */
-  private function setCompiledContainer(array $modules) {
+  private function getCompiledContainer(array $modules) {
     // The container classname is the name of the current test class, but in a
     // fake \Drupal\Container namespace, so as to guarantee that it does not
     // conflict with any code that might introspect available classes.
@@ -238,14 +258,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
         $kernel->updateModules($extensions, $extensions);
       }
       $kernel->boot();
-      if ($modules) {
-        $kernel->getContainer()->get('config.storage')->write('core.extension', array(
-          'module' => array_fill_keys($modules, 0),
-          'theme' => array(),
-          'disabled' => array('theme' => array()),
-        ));
-        $kernel->getContainer()->get('module_handler')->loadAll();
-      }
 
       // Dump the container to disk and load its PHP code.
       $dumper = new PhpDumper($kernel->getContainer());
@@ -258,12 +270,13 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       file_put_contents($container_file, $code);
       include $container_file;
       unlink($container_file);
-      // Trigger garbage collection.
+      // Destruct and trigger garbage collection.
       \Drupal::setContainer(NULL);
+      $this->container = NULL; // @see register()
       $kernel->shutdown();
       $kernel = NULL;
     }
-    $this->container = new $container_classname();
+    return new $container_classname();
   }
 
   /**
@@ -276,7 +289,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    * Disadvantages:
    * - A ContainerBuilder does not match actual Drupal environment.
    */
-  private function setCompiledContainerBuilder(array $modules) {
+  private function getCompiledContainerBuilder(array $modules) {
     if (!isset(self::$initialContainerBuilder)) {
       $kernel = new DrupalKernel('testing', $this->classLoader, FALSE);
       $kernel->setSitePath($this->siteDirectory);
@@ -284,29 +297,24 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
         $kernel->updateModules($extensions, $extensions);
       }
       $kernel->boot();
-      if ($modules) {
-        $kernel->getContainer()->get('config.storage')->write('core.extension', array(
-          'module' => array_fill_keys($modules, 0),
-          'theme' => array(),
-          'disabled' => array('theme' => array()),
-        ));
-        $kernel->getContainer()->get('module_handler')->loadAll();
-      }
 
       // Remove all instantiated services, so the container is safe for cloning.
-      $container = $kernel->getContainer();
-      foreach ($container->getServiceIds() as $id) {
-        if ($id !== 'service_container' && $container->initialized($id)) {
-          $container->set($id, NULL);
-        }
+      // Technically, ContainerBuilder::set($id, NULL) removes each definition,
+      // but the container is compiled/frozen already.
+      self::$initialContainerBuilder = $kernel->getContainer();
+      foreach (self::$initialContainerBuilder->getServiceIds() as $id) {
+        self::$initialContainerBuilder->set($id, NULL);
       }
-      self::$initialContainerBuilder = clone $container;
-      // Trigger garbage collection.
+      // Destruct and trigger garbage collection.
       \Drupal::setContainer(NULL);
+      $this->container = NULL; // @see register()
       $kernel->shutdown();
       $kernel = NULL;
     }
-    $this->container = clone self::$initialContainerBuilder;
+    $container = clone self::$initialContainerBuilder;
+    // @see https://github.com/symfony/symfony/pull/11422
+    $container->set('service_container', $container);
+    return $container;
   }
 
   /**
