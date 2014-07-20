@@ -15,11 +15,12 @@
       <directory>./modules/**/tests/src</directory>
       <directory>../modules/**/tests/src</directory>
       <directory>../sites/*/modules/**/tests/src</directory>
-      <exclude>**/kernel</exclude>
+      <exclude>./tests/Drupal/Tests/KernelTestBaseTest.php</exclude>
+      <exclude>**/Kernel</exclude>
       <exclude>**/vendor</exclude>
     </testsuite>
     <testsuite name="Kernel">
-      <!-- @todo Move to /tests/src/kernel/* -->
+      <!-- @todo Move to /tests/src/Kernel/* -->
       <directory>./modules/**/src/Tests</directory>
       <directory>../modules/**/src/Tests</directory>
       <directory>../sites/*/modules/**/src/Tests</directory>
