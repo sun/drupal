@@ -180,18 +180,29 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // Theoretically, this is a setUpBeforeClass() operation, but object scope
     // is required in order to inject $this test class instance as a service
     // provider into DrupalKernel (see above).
-    // Variant #1: Actually compiled + dumped Container class.
-    //$container = $this->getCompiledContainer($modules);
-    // Variant #2: Clone of a compiled, empty ContainerBuilder instance.
-    $container = $this->getCompiledContainerBuilder($modules);
+    $rc = new \ReflectionClass(get_class($this));
+    $test_method_count = count(array_filter($rc->getMethods(), function ($method) {
+      // PHPUnit's @test annotations are intentionally ignored/not supported.
+      return strpos($method->getName(), 'test') === 0;
+    }));
+    if ($test_method_count > 1) {
+      // Variant #1: Actually compiled + dumped Container class.
+      //$container = $this->getCompiledContainer($modules);
+      // Variant #2: Clone of a compiled, empty ContainerBuilder instance.
+      $container = $this->getCompiledContainerBuilder($modules);
+    }
 
     // Bootstrap a kernel. Don't use createFromRequest to retain Settings.
     $kernel = new DrupalKernel('testing', $this->classLoader, FALSE);
     $kernel->setSitePath($this->siteDirectory);
+    // Boot the precompiled container. The kernel will enhance it with synthetic
+    // services.
     if (isset($container)) {
       $kernel->setContainer($container);
       unset($container);
     }
+    // Boot a new one-time container from scratch. Ensure to set the module list
+    // upfront to avoid a subsequent rebuild.
     elseif ($modules && $extensions = $this->getExtensionsForModules($modules)) {
       $kernel->updateModules($extensions, $extensions);
     }
