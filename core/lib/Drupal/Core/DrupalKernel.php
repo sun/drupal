@@ -412,7 +412,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   /**
    * {@inheritdoc}
    */
-  public function setContainer(ContainerInterface $container) {
+  public function setContainer(ContainerInterface $container = NULL) {
     $this->container = $container;
     return $this;
   }

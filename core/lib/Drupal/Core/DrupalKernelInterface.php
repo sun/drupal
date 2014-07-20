@@ -67,7 +67,7 @@ interface DrupalKernelInterface extends HttpKernelInterface {
    *
    * @return $this
    */
-  public function setContainer(ContainerInterface $container);
+  public function setContainer(ContainerInterface $container = NULL);
 
   /**
    * Set the current site path.
