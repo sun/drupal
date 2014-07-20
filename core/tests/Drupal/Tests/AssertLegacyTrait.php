@@ -9,8 +9,18 @@ namespace Drupal\Tests;
 
 /**
  * Translates Simpletest assertion methods to PHPUnit.
+ *
+ * Protected methods are custom. Public static methods override methods of
+ * \PHPUnit_Framework_Assert.
  */
 trait AssertLegacyTrait {
+
+  /**
+   * @see \Drupal\simpletest\TestBase::assert()
+   */
+  protected function assert($actual, $message = '') {
+    parent::assertTrue($actual, $message);
+  }
 
   /**
    * @see \Drupal\simpletest\TestBase::assertTrue()
@@ -76,6 +86,14 @@ trait AssertLegacyTrait {
    */
   protected function pass($message) {
     $this->assertTrue(TRUE, $message);
+  }
+
+  /**
+   * @see \Drupal\simpletest\TestBase::verbose()
+   */
+  protected function verbose() {
+    // No-op.
+    // @todo Determine whether the --debug command line option can be accessed.
   }
 
 }

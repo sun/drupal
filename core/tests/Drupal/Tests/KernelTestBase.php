@@ -8,6 +8,9 @@
 namespace Drupal\Tests;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Config\ConfigImporter;
+use Drupal\Core\Config\StorageComparer;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
@@ -711,6 +714,120 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $this->setRawContent($content);
     $this->verbose('<pre style="white-space: pre-wrap">' . String::checkPlain($content));
     return $content;
+  }
+
+  /**
+   * Changes in-memory settings.
+   *
+   * @param string $name
+   *   The name of the setting to set.
+   * @param bool|string|int|array|null $value
+   *   The value to set.
+   *
+   * @return void
+   *
+   * @see \Drupal\Core\Site\Settings::get()
+   */
+  protected function settingsSet($name, $value) {
+    $settings = Settings::getAll();
+    $settings[$name] = $value;
+    new Settings($settings);
+  }
+
+  /**
+   * Converts a list of possible parameters into a stack of permutations.
+   *
+   * Takes a list of parameters containing possible values, and converts all of
+   * them into a list of items containing every possible permutation.
+   *
+   * Example:
+   * @code
+   * $parameters = array(
+   *   'one' => array(0, 1),
+   *   'two' => array(2, 3),
+   * );
+   * $permutations = KernelTestBase::generatePermutations($parameters);
+   * // Result:
+   * $permutations == array(
+   *   array('one' => 0, 'two' => 2),
+   *   array('one' => 1, 'two' => 2),
+   *   array('one' => 0, 'two' => 3),
+   *   array('one' => 1, 'two' => 3),
+   * )
+   * @endcode
+   *
+   * @param array $parameters
+   *   An associative array of parameters, keyed by parameter name, and whose
+   *   values are arrays of parameter values.
+   *
+   * @return array
+   *   A list of permutations, which is an array of arrays. Each inner array
+   *   contains the full list of parameters that have been passed, but with a
+   *   single value only.
+   */
+  public static function generatePermutations(array $parameters) {
+    $all_permutations = array(array());
+    foreach ($parameters as $parameter => $values) {
+      $new_permutations = array();
+      // Iterate over all values of the parameter.
+      foreach ($values as $value) {
+        // Iterate over all existing permutations.
+        foreach ($all_permutations as $permutation) {
+          // Add the new parameter value to existing permutations.
+          $new_permutations[] = $permutation + array($parameter => $value);
+        }
+      }
+      // Replace the old permutations with the new permutations.
+      $all_permutations = $new_permutations;
+    }
+    return $all_permutations;
+  }
+
+  /**
+   * Returns a ConfigImporter object to import test configuration.
+   *
+   * @return \Drupal\Core\Config\ConfigImporter
+   *
+   * @todo Move into Config test-specific base class.
+   */
+  protected function configImporter() {
+    if (!$this->configImporter) {
+      // Set up the ConfigImporter object for testing.
+      $storage_comparer = new StorageComparer(
+        $this->container->get('config.storage.staging'),
+        $this->container->get('config.storage'),
+        $this->container->get('config.manager')
+      );
+      $this->configImporter = new ConfigImporter(
+        $storage_comparer,
+        $this->container->get('event_dispatcher'),
+        $this->container->get('config.manager'),
+        $this->container->get('lock'),
+        $this->container->get('config.typed'),
+        $this->container->get('module_handler'),
+        $this->container->get('theme_handler'),
+        $this->container->get('string_translation')
+      );
+    }
+    // Always recalculate the changelist when called.
+    return $this->configImporter->reset();
+  }
+
+  /**
+   * Copies configuration objects from a source storage to a target storage.
+   *
+   * @param \Drupal\Core\Config\StorageInterface $source_storage
+   *   The source config storage.
+   * @param \Drupal\Core\Config\StorageInterface $target_storage
+   *   The target config storage.
+   *
+   * @todo Move into Config test-specific base class.
+   */
+  protected function copyConfig(StorageInterface $source_storage, StorageInterface $target_storage) {
+    $target_storage->deleteAll();
+    foreach ($source_storage->listAll() as $name) {
+      $target_storage->write($name, $source_storage->read($name));
+    }
   }
 
   /**
