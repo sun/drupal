@@ -91,13 +91,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   public static $modules = array();
 
   /**
-   * The configuration directories for this test run.
-   *
-   * @var array
-   */
-  protected $configDirectories = array();
-
-  /**
    * A list of stream wrappers that have been registered for this test.
    *
    * @see \Drupal\Tests\KernelTestBase::registerStreamWrapper()
@@ -112,31 +105,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   public static function setUpBeforeClass() {
     parent::setUpBeforeClass();
     chdir(__DIR__ . '/../../../../');
-  }
-
-  /**
-   * Create and set new configuration directories.
-   *
-   * @see config_get_config_directory()
-   *
-   * @throws \RuntimeException
-   *   Thrown when CONFIG_ACTIVE_DIRECTORY or CONFIG_STAGING_DIRECTORY cannot
-   *   be created or made writable.
-   */
-  protected function prepareConfigDirectories() {
-    $this->configDirectories = array();
-    include_once DRUPAL_ROOT . '/core/includes/install.inc';
-    foreach (array(CONFIG_ACTIVE_DIRECTORY, CONFIG_STAGING_DIRECTORY) as $type) {
-      // Assign the relative path to the global variable.
-      $path = $this->siteDirectory . '/config_' . $type;
-      $GLOBALS['config_directories'][$type] = $path;
-      // Ensure the directory can be created and is writeable.
-      if (!install_ensure_config_directory($type)) {
-        throw new \RuntimeException("Failed to create '$type' config directory $path");
-      }
-      // Provide the already resolved path for tests.
-      $this->configDirectories[$type] = $path;
-    }
   }
 
   /**
@@ -217,9 +185,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $this->container->get('request_stack')->push($request);
 
     $this->container->set('test.logger', $this);
-
-    // Create and set new configuration directories.
-    #$this->prepareConfigDirectories();
 
     // Create a minimal core.extension configuration object so that the list of
     // enabled modules can be maintained allowing
@@ -888,6 +853,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'verboseDirectoryUrl',
       'dieOnFail',
       'kernel',
+      'configDirectories',
       'configImporter',
       // @see \Drupal\simpletest\TestBase::prepareEnvironment()
       'public_files_directory',
