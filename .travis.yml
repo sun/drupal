@@ -8,3 +8,4 @@ php:
 
 script:
   - phpunit -v -c core --testsuite Unit
+  - phpunit -v -c core --testsuite Kernel
