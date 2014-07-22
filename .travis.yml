@@ -7,5 +7,8 @@ php:
 #  - composer self-update
 
 script:
-  - phpunit -v -c core --testsuite Unit
-  - phpunit -v -c core --testsuite Kernel
+  # @todo Re-enable. For now, we know that it works.
+  #- phpunit -v -c core --testsuite Unit
+  # @todo Remove process isolation when no fatal errors remain.
+  #   Ensure to use committed version to account for STDERR/fatal error fix.
+  - ./core/vendor/phpunit/phpunit/phpunit -v --debug -c core --process-isolation --testsuite Kernel

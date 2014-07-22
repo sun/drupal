@@ -82,8 +82,15 @@ $dirs = array_reduce($dirs, 'array_merge', array());
 drupal_phpunit_register_extension_dirs($loader, $dirs);
 
 // Look into removing these later.
-define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
-define('DRUPAL_ROOT', realpath(__DIR__ . '/../../'));
+// PHPUnit process isolation template re-defines constants and reloads included
+// files (bootstrap.inc) before including this file (bootstrap.php).
+// @todo Fix this upstream and/or use a custom child process template.
+if (!defined('REQUEST_TIME')) {
+  define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
+}
+if (!defined('DRUPAL_ROOT')) {
+  define('DRUPAL_ROOT', realpath(__DIR__ . '/../../'));
+}
 
 // Set sane locale settings, to ensure consistent string, dates, times and
 // numbers handling.
@@ -93,3 +100,6 @@ setlocale(LC_ALL, 'C');
 // Set the default timezone. While this doesn't cause any tests to fail, PHP
 // complains if 'date.timezone' is not set in php.ini.
 date_default_timezone_set('UTC');
+
+// Clean up.
+unset($extension_roots, $dirs);
