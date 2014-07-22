@@ -7,6 +7,9 @@
 
 namespace Drupal\Tests;
 
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\visitor\vfsStreamStructureVisitor;
+
 /**
  * @coversDefaultClass \Drupal\Tests\KernelTestBase
  * @group PHPUnit
@@ -27,8 +30,24 @@ class KernelTestBaseTest extends KernelTestBase {
    * @covers ::prepareEnvironment
    */
   public function testPrepareEnvironment() {
-    $this->assertStringStartsWith('sites/simpletest/', $this->siteDirectory);
-    $this->assertEquals('', $this->databasePrefix);
+    $this->assertRegExp('/^simpletest\d{6}$/', $this->databasePrefix);
+    $this->assertStringStartsWith('vfs://root/sites/simpletest/', $this->siteDirectory);
+    $this->assertEquals(array(
+      'root' => array(
+        'sites' => array(
+          'simpletest' => array(
+            substr($this->databasePrefix, 10) => array(
+              'files' => array(
+                'config' => array(
+                  'active' => array(),
+                  'staging' => array(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ), vfsStream::inspect(new vfsStreamStructureVisitor())->getStructure());
   }
 
   /**

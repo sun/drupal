@@ -24,6 +24,8 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\HttpFoundation\Request;
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\visitor\vfsStreamPrintVisitor;
 
 /**
  * Base class for functional integration tests.
@@ -95,6 +97,13 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   public static $modules = array();
 
   /**
+   * The virtual filesystem root directory.
+   *
+   * @var \org\bovigo\vfs\vfsStreamDirectory
+   */
+  protected $vfsRoot;
+
+  /**
    * A list of stream wrappers that have been registered for this test.
    *
    * @see \Drupal\Tests\KernelTestBase::registerStreamWrapper()
@@ -124,26 +133,40 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     // @todo Better way? PHPUnit seems to access it from constants.
     $this->classLoader = $GLOBALS['loader'];
 
-    // Assign a unique test site directory; account for concurrent threads.
-    // @todo Remove, or replace with vfsStream. 
-    do {
-      $suffix = mt_rand(100000, 999999);
-      $this->siteDirectory = 'sites/simpletest/' . $suffix;
-    } while (is_dir(DRUPAL_ROOT . '/' . $this->siteDirectory));
+    // Set up virtual filesystem.
+    // Uses a random ID, since created test files may be processed by file
+    // discovery/parser services that are using a static cache to avoid parsing
+    // the identical files multiple times.
+    $suffix = mt_rand(100000, 999999);
+    $this->vfsRoot = vfsStream::setup('root', NULL, array(
+      'sites' => array(
+        'simpletest' => array(
+          $suffix => array(),
+        ),
+      ),
+    ));
+    $this->siteDirectory = vfsStream::url('root/sites/simpletest/' . $suffix);
 
-//    mkdir($this->siteDirectory, 0775, TRUE);
+    mkdir($this->siteDirectory . '/files', 0775);
+    mkdir($this->siteDirectory . '/files/config/' . CONFIG_ACTIVE_DIRECTORY, 0775, TRUE);
+    mkdir($this->siteDirectory . '/files/config/' . CONFIG_STAGING_DIRECTORY, 0775, TRUE);
 
     // Ensure that all code that relies on drupal_valid_test_ua() can still be
     // safely executed. This primarily affects the (test) site directory
     // resolution (which is used by e.g. LocalStream and PhpStorage).
-    drupal_valid_test_ua('simpletest' . $suffix);
-
-    $this->databasePrefix = ''; // sqlite://:memory:
+    // @todo Misleading property name, because sqlite://:memory:
+    $this->databasePrefix = 'simpletest' . $suffix;
+    drupal_valid_test_ua($this->databasePrefix);
 
     $settings = array(
       'hash_salt' => get_class($this),
+      'file_public_path' => $this->siteDirectory . '/files',
       // Disable Twig template caching/dumping.
       'twig_cache' => FALSE,
+    );
+    $GLOBALS['config_directories'] = array(
+      CONFIG_ACTIVE_DIRECTORY => $this->siteDirectory . '/files/config/active',
+      CONFIG_STAGING_DIRECTORY => $this->siteDirectory . '/files/config/staging',
     );
 
     $databases['default']['default'] = array(
@@ -442,11 +465,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
     foreach (Database::getAllConnectionInfo() as $key => $targets) {
       Database::removeConnection($key);
-    }
-
-    if (is_dir($this->siteDirectory)) {
-      // @todo Recurse. 
-      rmdir($this->siteDirectory);
     }
 
     $this->container = NULL;
@@ -842,6 +860,20 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       }
       throw new \ErrorException($message, $level, $level, $context['backtrace'][0]['file'], $context['backtrace'][0]['line']);
     }
+  }
+
+  /**
+   * Stops test execution.
+   */
+  protected function stop() {
+    $this->getTestResultObject()->stop();
+  }
+
+  /**
+   * Dumps the current state of the virtual filesystem to STDOUT.
+   */
+  protected function vfsDump() {
+    vfsStream::inspect(new vfsStreamPrintVisitor());
   }
 
   /**
