@@ -252,7 +252,10 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     elseif ($modules && $extensions = $this->getExtensionsForModules($modules)) {
       $kernel->updateModules($extensions, $extensions);
     }
-    $kernel->boot();
+    // DrupalKernel::boot() is not sufficient as it does not invoke
+    // DrupalKernel::preHandle(), which initializes legacy global variables.
+    $request = Request::create('/');
+    $kernel->prepareLegacyRequest($request);
 
     // register() is only called if a new container was built/compiled.
     $this->container = $kernel->getContainer();
@@ -260,10 +263,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     if ($modules) {
       $this->container->get('module_handler')->loadAll();
     }
-
-    // Add a master request to the stack.
-    $request = Request::create('/');
-    $this->container->get('request_stack')->push($request);
 
     $this->container->set('test.logger', $this);
 
