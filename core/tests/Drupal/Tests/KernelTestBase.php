@@ -83,18 +83,30 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
   /**
    * {@inheritdoc}
-   *
-   * Fixes missing invocation of bootstrap.php when $preserveGlobalState is
-   * FALSE.
-   *
-   * @see https://github.com/sebastianbergmann/phpunit/pull/797
    */
   protected function prepareTemplate(\Text_Template $template) {
+    $bootstrap_globals = '';
+    // Fix missing bootstrap.php when $preserveGlobalState is FALSE.
+    // @see https://github.com/sebastianbergmann/phpunit/pull/797
+    $bootstrap_globals .= '$__PHPUNIT_BOOTSTRAP = ' . var_export($GLOBALS['__PHPUNIT_BOOTSTRAP'], TRUE) . ";\n";
+    // @see /core/tests/bootstrap.php
+    $bootstrap_globals .= '$namespaces = ' . var_export($GLOBALS['namespaces'], TRUE) . ";\n";
     $template->setVar(array(
       'constants' => '',
       'included_files' => '',
-      'globals' => '$GLOBALS[\'__PHPUNIT_BOOTSTRAP\'] = ' . var_export($GLOBALS['__PHPUNIT_BOOTSTRAP'], TRUE) . ";\n",
+      'globals' => $bootstrap_globals,
     ));
+  }
+
+  /**
+   * Returns whether the current test runs in isolation.
+   *
+   * @return bool
+   *
+   * @see https://github.com/sebastianbergmann/phpunit/pull/1350
+   */
+  protected function isTestInIsolation() {
+    return function_exists('__phpunit_run_isolated_test');
   }
 
   protected $classLoader;
@@ -154,6 +166,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     require_once DRUPAL_ROOT . '/core/includes/bootstrap.inc';
 
     // @todo Better way? PHPUnit seems to access it from constants.
+    // @see /core/tests/bootstrap.php
     $this->classLoader = $GLOBALS['loader'];
 
     // Set up virtual filesystem.
@@ -231,7 +244,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       // PHPUnit's @test annotations are intentionally ignored/not supported.
       return strpos($method->getName(), 'test') === 0;
     }));
-    if ($test_method_count > 1) {
+    if ($test_method_count > 1 && !$this->isTestInIsolation()) {
       // Variant #1: Actually compiled + dumped Container class.
       //$container = $this->getCompiledContainer($modules);
       // Variant #2: Clone of a compiled, empty ContainerBuilder instance.
