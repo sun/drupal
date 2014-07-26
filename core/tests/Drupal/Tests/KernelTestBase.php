@@ -109,6 +109,28 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     return function_exists('__phpunit_run_isolated_test');
   }
 
+  public function run(\PHPUnit_Framework_TestResult $result = null) {
+    if (in_array(get_class($this), array(
+      'Drupal\config\Tests\ConfigImportRecreateTest',
+      'Drupal\file\Tests\UsageTest',
+      'Drupal\file\Tests\ValidatorTest',
+      'Drupal\system\Tests\Cache\ApcuBackendUnitTest',
+      'Drupal\system\Tests\DrupalKernel\DrupalKernelTest',
+      'Drupal\system\Tests\Entity\EntityFieldTest',
+      'Drupal\system\Tests\Entity\EntityValidationTest',
+      'Drupal\system\Tests\Extension\ModuleHandlerTest',
+      'Drupal\system\Tests\Path\AliasTest',
+      'Drupal\system\Tests\System\ScriptTest',
+      'Drupal\user\Tests\UserAccountFormFieldsTest',
+      'Drupal\views\Tests\Handler\RelationshipTest',
+      'Drupal\views\Tests\Plugin\DisplayPageTest',
+      'Drupal\views\Tests\Plugin\JoinTest',
+    ))) {
+      $this->runTestInSeparateProcess = TRUE;
+    }
+    return parent::run($result);
+  }
+
   protected $classLoader;
   protected $siteDirectory;
   protected $databasePrefix;
