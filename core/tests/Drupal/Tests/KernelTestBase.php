@@ -476,10 +476,16 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
         ->setArguments(array(1));
     }
 
+    // @todo Remove this BC layer.
+    $this->containerBuild($container);
+
     $container
       ->register('test.logger', __CLASS__)
       ->setSynthetic(TRUE)
       ->addTag('logger');
+  }
+
+  public function containerBuild(ContainerBuilder $container) {
   }
 
   /**
