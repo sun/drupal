@@ -120,6 +120,14 @@ abstract class LocalStream implements StreamWrapperInterface {
       $uri = $this->uri;
     }
     $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+
+    // In PHPUnit tests, the base path for local streams may be a virtual
+    // filesystem stream wrapper URI, in which case this local stream acts like
+    // a proxy. realpath() is (obviously) not supported by vfsStream.
+    if (strpos($path, 'vfs://') === 0) {
+      return $path;
+    }
+
     $realpath = realpath($path);
     if (!$realpath) {
       // This file does not yet exist.
@@ -127,7 +135,10 @@ abstract class LocalStream implements StreamWrapperInterface {
     }
     $directory = realpath($this->getDirectoryPath());
     if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
-      return FALSE;
+      throw new \RuntimeException(vsprintf("Unable to resolve URI %s to local path %s", array(
+        var_export($uri, TRUE),
+        var_export($path, TRUE),
+      )));
     }
     return $realpath;
   }

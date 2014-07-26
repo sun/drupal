@@ -488,15 +488,12 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       $this->container->get('kernel')->shutdown();
     }
 
-    // Before tearing down the test environment, ensure that no stream wrapper
-    // of this test leaks into the parent environment. Unlike all other global
-    // state variables in Drupal, stream wrappers are a global state construct
-    // of PHP core, which has to be maintained manually.
+    // Stream wrappers are a native global state construct of PHP core, which
+    // has to be maintained manually. Ensure that no stream wrapper of this test
+    // leaks into subsequently executed tests.
     // @todo Move StreamWrapper management into DrupalKernel.
     // @see https://drupal.org/node/2028109
-    foreach ($this->streamWrappers as $scheme => $type) {
-      $this->unregisterStreamWrapper($scheme, $type);
-    }
+    $this->unregisterAllStreamWrappers();
 
     foreach (Database::getAllConnectionInfo() as $key => $targets) {
       Database::removeConnection($key);
@@ -505,6 +502,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $this->container = NULL;
     \Drupal::setContainer(NULL);
     new Settings(array());
+    drupal_static_reset();
 
     parent::tearDown();
   }
@@ -743,6 +741,21 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       if (is_int($filter) && (($filter & $type) == $filter)) {
         unset($wrappers[$filter][$scheme]);
       }
+    }
+  }
+
+  /**
+   * Unregisters all custom stream wrappers.
+   */
+  protected function unregisterAllStreamWrappers() {
+    // @todo Revamp Drupal's stream wrapper API for D8.
+    // @see https://drupal.org/node/2028109
+    $wrappers = &drupal_static('file_get_stream_wrappers', array());
+    foreach ($wrappers[STREAM_WRAPPERS_ALL] as $scheme => $info) {
+      stream_wrapper_unregister($scheme);
+      unset($wrappers[STREAM_WRAPPERS_ALL][$scheme]);
+      unset($wrappers[STREAM_WRAPPERS_WRITE_VISIBLE][$scheme]);
+      unset($this->streamWrappers[$scheme]);
     }
   }
 
