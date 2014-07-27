@@ -10,4 +10,4 @@ script:
   # @todo Re-enable. For now, we know that it works.
   #- phpunit -v -c core --testsuite Unit
   # @todo Update to new stable once all fixes are in upstream.
-  - ./core/vendor/phpunit/phpunit/phpunit -v --debug -c core --testsuite Kernel
+  - ./core/vendor/phpunit/phpunit/phpunit -v -c core --testsuite Kernel
