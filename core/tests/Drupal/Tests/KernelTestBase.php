@@ -727,6 +727,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    */
   protected function registerStreamWrapper($scheme, $class, $type = STREAM_WRAPPERS_LOCAL_NORMAL) {
     if (isset($this->streamWrappers[$scheme])) {
+      $this->triggerDeprecated(sprintf("Stream wrapper scheme '%s' is already registered; possibly by hook_stream_wrappers() of an enabled (test) module. Do not call %s(), or do not enable the module.", $scheme, __FUNCTION__));
       $this->unregisterStreamWrapper($scheme, $this->streamWrappers[$scheme]);
     }
     $this->streamWrappers[$scheme] = $type;
@@ -977,6 +978,36 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   }
 
   public function __get($name) {
+    if (in_array($name, array(
+      'public_files_directory',
+      'private_files_directory',
+      'temp_files_directory',
+      'translation_files_directory',
+    ))) {
+      $this->triggerDeprecated(sprintf("KernelTestBase::\$%s no longer exists. Use the regular API method to retrieve it instead (e.g., Settings).", $name));
+      switch ($name) {
+        case 'public_files_directory':
+          return Settings::get('file_public_path', conf_path() . '/files');
+
+        case 'private_files_directory':
+          return $this->container->get('config.factory')->get('system.file')->get('path.private');
+
+        case 'temp_files_directory':
+          return file_directory_temp();
+
+        case 'translation_files_directory':
+          return Settings::get('file_public_path', conf_path() . '/translations');
+      }
+    }
+
+    if ($name === 'configDirectories') {
+      $this->triggerDeprecated(sprintf("KernelTestBase::\$%s no longer exists. Use config_get_config_directory() directly instead.", $name));
+      return array(
+        CONFIG_ACTIVE_DIRECTORY => config_get_config_directory(CONFIG_ACTIVE_DIRECTORY),
+        CONFIG_STAGING_DIRECTORY => config_get_config_directory(CONFIG_STAGING_DIRECTORY),
+      );
+    }
+
     $denied = array(
       // @see \Drupal\simpletest\TestBase
       'testId',
@@ -992,13 +1023,8 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'verboseDirectoryUrl',
       'dieOnFail',
       'kernel',
-      'configDirectories',
       'configImporter',
       // @see \Drupal\simpletest\TestBase::prepareEnvironment()
-      'public_files_directory',
-      'private_files_directory',
-      'temp_files_directory',
-      'translation_files_directory',
       'generatedTestFiles',
       // @see \Drupal\simpletest\KernelTestBase::containerBuild()
       'keyValueFactory',
@@ -1010,6 +1036,27 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
   public function __set($name, $value) {
     $this->__get($name);
+  }
+
+  /**
+   * Triggers a test framework feature deprecation warning.
+   *
+   * Does not halt test execution.
+   *
+   * @param string $message
+   *   The plain-text message to output (on CLI).
+   */
+  private function triggerDeprecated($message) {
+    if (class_exists('PHPUnit_Util_DeprecatedFeature')) {
+      $message = get_class($this) . '::' . $this->getName() . "\n" . $message;
+      $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+      $this->getTestResultObject()->addDeprecatedFeature(
+        new \PHPUnit_Util_DeprecatedFeature($message, $trace[1])
+      );
+    }
+    else {
+      trigger_error($message, E_USER_DEPRECATED);
+    }
   }
 
 }
