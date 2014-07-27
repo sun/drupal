@@ -312,16 +312,25 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'disabled' => array('theme' => array()),
     ));
 
-    // Tests based on this class are entitled to use Drupal's File and
-    // StreamWrapper APIs.
+    // Record custom stream wrappers that have been registered by modules during
+    // kernel boot.
     // @todo Move StreamWrapper management into DrupalKernel.
     // @see https://drupal.org/node/2028109
-    // The public stream wrapper only depends on the file_public_path setting,
-    // which is provided by UnitTestBase::setUp().
-//    $this->registerStreamWrapper('public', 'Drupal\Core\StreamWrapper\PublicStream');
-    // The temporary stream wrapper is able to operate both with and without
-    // configuration.
-//    $this->registerStreamWrapper('temporary', 'Drupal\Core\StreamWrapper\TemporaryStream');
+    $wrappers = &drupal_static('file_get_stream_wrappers', array());
+    foreach ($wrappers[STREAM_WRAPPERS_ALL] as $scheme => $info) {
+      $this->streamWrappers[$scheme] = $info['type'];
+    }
+
+    // Register default stream wrappers to avoid needless dependencies on System
+    // module in tests.
+    if (!isset($this->streamWrappers['public'])) {
+      // The public stream wrapper only depends on 'file_public_path'.
+      $this->registerStreamWrapper('public', 'Drupal\Core\StreamWrapper\PublicStream');
+    }
+    if (!isset($this->streamWrappers['temporary'])) {
+      // The temporary stream wrapper only depends on the OS temp directory.
+      $this->registerStreamWrapper('temporary', 'Drupal\Core\StreamWrapper\TemporaryStream');
+    }
   }
 
   /**

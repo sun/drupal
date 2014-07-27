@@ -41,7 +41,10 @@ abstract class FileTestBase extends DrupalUnitTestBase {
     $this->installConfig(array('system'));
     $this->registerStreamWrapper('private', 'Drupal\Core\StreamWrapper\PrivateStream');
 
-    if (isset($this->scheme)) {
+    // hook_stream_wrappers() of enabled $modules gets invoked already. Only
+    // register a custom test stream wrapper if both a scheme and a class have
+    // been provided.
+    if (isset($this->scheme) && isset($this->classname)) {
       $this->registerStreamWrapper($this->scheme, $this->classname);
     }
   }
@@ -68,7 +71,8 @@ abstract class FileTestBase extends DrupalUnitTestBase {
     // read/write/execute bits. On Windows, chmod() ignores the "group" and
     // "other" bits, and fileperms() returns the "user" bits in all three
     // positions. $expected_mode is updated to reflect this.
-    if (substr(PHP_OS, 0, 3) == 'WIN') {
+    // This only affects real files that exist in the local filesystem.
+    if (substr(PHP_OS, 0, 3) == 'WIN' && realpath($filepath)) {
       // Reset the "group" and "other" bits.
       $expected_mode = $expected_mode & 0700;
       // Shift the "user" bits to the "group" and "other" positions also.
