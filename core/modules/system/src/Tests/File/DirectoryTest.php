@@ -46,9 +46,11 @@ class DirectoryTest extends FileTestBase {
     $this->assertDirectoryPermissions($directory, $old_mode);
 
     // Check creating a directory using an absolute path.
-    $absolute_path = drupal_realpath($directory) . '/' . $this->randomMachineName() . '/' . $this->randomMachineName();
-    $this->assertTrue(drupal_mkdir($absolute_path, 0775, TRUE), 'No error reported when creating new absolute directories.', 'File');
-    $this->assertDirectoryPermissions($absolute_path, 0775);
+    if ($absolute_path = drupal_realpath($directory)) {
+      $absolute_path = $absolute_path . '/' . $this->randomMachineName() . '/' . $this->randomMachineName();
+      $this->assertTrue(drupal_mkdir($absolute_path, 0775, TRUE), 'No error reported when creating new absolute directories.', 'File');
+      $this->assertDirectoryPermissions($absolute_path, 0775);
+    }
   }
 
   /**
@@ -68,7 +70,7 @@ class DirectoryTest extends FileTestBase {
     // Make sure directory actually exists.
     $this->assertTrue(is_dir($directory), 'Directory actually exists.', 'File');
 
-    if (substr(PHP_OS, 0, 3) != 'WIN') {
+    if (substr(PHP_OS, 0, 3) != 'WIN' || !realpath($directory)) {
       // PHP on Windows doesn't support any kind of useful read-only mode for
       // directories. When executing a chmod() on a directory, PHP only sets the
       // read-only flag, which doesn't prevent files to actually be written

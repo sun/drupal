@@ -22,8 +22,8 @@ class HtaccessUnitTest extends DrupalUnitTestBase {
    */
   function testHtaccessSave() {
     // Prepare test directories.
-    $public = $this->public_files_directory . '/test/public';
-    $private = $this->public_files_directory . '/test/private';
+    $public = $this->siteDirectory . '/files/test/public';
+    $private = $this->siteDirectory . '/files/test/private';
     $stream = 'public://test/stream';
 
     // Verify that file_save_htaccess() returns FALSE if .htaccess cannot be
@@ -31,6 +31,7 @@ class HtaccessUnitTest extends DrupalUnitTestBase {
     // Note: We cannot test the condition of a directory lacking write
     // permissions, since at least on Windows file_save_htaccess() succeeds
     // even when changing directory permissions to 0000.
+    $this->setExpectedLogMessage(WATCHDOG_ERROR, "Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %s directory which contains the following lines: %a");
     $this->assertFalse(file_save_htaccess($public, FALSE));
 
     // Create public .htaccess file.

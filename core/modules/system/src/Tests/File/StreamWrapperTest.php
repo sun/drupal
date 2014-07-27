@@ -17,13 +17,6 @@ use Drupal\Core\StreamWrapper\PublicStream;
 class StreamWrapperTest extends FileTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  public static $modules = array('file_test');
-
-  /**
    * A stream wrapper scheme to register for the test.
    *
    * @var string
