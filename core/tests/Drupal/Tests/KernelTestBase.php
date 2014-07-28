@@ -170,6 +170,13 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   private $streamWrappers = array();
 
   /**
+   * @todo Remove.
+   *
+   * @var \Drupal\Core\Config\ConfigImporter
+   */
+  protected $configImporter;
+
+  /**
    * {@inheritdoc}
    */
   public static function setUpBeforeClass() {
@@ -1032,7 +1039,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'verboseDirectoryUrl',
       'dieOnFail',
       'kernel',
-      'configImporter',
       // @see \Drupal\simpletest\TestBase::prepareEnvironment()
       'generatedTestFiles',
       // @see \Drupal\simpletest\KernelTestBase::containerBuild()
