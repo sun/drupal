@@ -13,6 +13,7 @@ use Drupal\Core\Cache\ApcuBackend;
  * Tests the APCu cache backend.
  *
  * @group Cache
+ * @requires extension apc
  */
 class ApcuBackendUnitTest extends GenericCacheBackendUnitTestBase {
 
