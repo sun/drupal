@@ -23,6 +23,7 @@ use Drupal\simpletest\RandomGeneratorTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\visitor\vfsStreamPrintVisitor;
@@ -468,6 +469,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   public function register(ContainerBuilder $container) {
     $this->container = $container;
 
+    $container
+      ->register('flood', 'Drupal\Core\Flood\MemoryBackend')
+      ->addArgument(new Reference('request_stack'));
     $container
       ->register('lock', 'Drupal\Core\Lock\NullLockBackend');
     $container
