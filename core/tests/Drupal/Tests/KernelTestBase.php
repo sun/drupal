@@ -736,7 +736,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    */
   protected function registerStreamWrapper($scheme, $class, $type = STREAM_WRAPPERS_LOCAL_NORMAL) {
     if (isset($this->streamWrappers[$scheme])) {
-      $this->triggerDeprecated(sprintf("Stream wrapper scheme '%s' is already registered; possibly by hook_stream_wrappers() of an enabled (test) module. Do not call %s(), or do not enable the module.", $scheme, __FUNCTION__));
+      $this->triggerDeprecated(sprintf("Stream wrapper scheme '%s' is already registered; possibly by hook_stream_wrappers() of an enabled (test) module. Either do not call %s() or do not enable the module.", $scheme, __FUNCTION__));
       $this->unregisterStreamWrapper($scheme, $this->streamWrappers[$scheme]);
     }
     $this->streamWrappers[$scheme] = $type;
