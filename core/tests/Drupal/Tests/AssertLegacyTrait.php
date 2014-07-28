@@ -19,7 +19,7 @@ trait AssertLegacyTrait {
    * @see \Drupal\simpletest\TestBase::assert()
    */
   protected function assert($actual, $message = '') {
-    parent::assertTrue($actual, $message);
+    parent::assertTrue((bool) $actual, $message);
   }
 
   /**
