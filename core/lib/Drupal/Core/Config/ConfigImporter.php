@@ -198,6 +198,7 @@ class ConfigImporter {
    *   The message to log.
    */
   public function logError($message) {
+    trigger_error($message, E_USER_ERROR);
     $this->errors[] = $message;
   }
 
