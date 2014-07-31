@@ -30,6 +30,20 @@ class TextPlainUnitTest extends DrupalUnitTestBase {
    */
   public static $modules = array('entity', 'field', 'text', 'entity_test', 'system', 'filter', 'user');
 
+  private $entity_type;
+  private $bundle;
+  private $field_name;
+  private $field_type;
+  private $field_settings;
+  private $instance_settings;
+  private $formatter_type;
+  private $formatter_settings;
+  private $fieldStorage;
+  private $instance;
+  private $view_mode;
+  private $display;
+  private $langcode;
+
   function setUp() {
     parent::setUp();
 

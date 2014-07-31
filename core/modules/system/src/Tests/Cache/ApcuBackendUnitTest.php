@@ -39,7 +39,9 @@ class ApcuBackendUnitTest extends GenericCacheBackendUnitTestBase {
   }
 
   public function tearDown() {
-    $this->backend->removeBin();
+    if ($this->backend) {
+      $this->backend->removeBin();
+    }
     parent::tearDown();
     $this->backend = NULL;
   }
