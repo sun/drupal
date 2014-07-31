@@ -5,6 +5,7 @@ php:
 
 #before_script:
 #  - composer self-update
+#  # @todo Enable APC(u) extension.
 
 script:
   # @todo Re-enable. For now, we know that it works.
