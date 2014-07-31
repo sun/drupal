@@ -795,16 +795,23 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
   /**
    * Unregisters all custom stream wrappers.
+   *
+   * @todo Revamp Drupal's stream wrapper API for D8.
+   * @see https://drupal.org/node/2028109
    */
   protected function unregisterAllStreamWrappers() {
-    // @todo Revamp Drupal's stream wrapper API for D8.
-    // @see https://drupal.org/node/2028109
+    // The file_get_stream_wrappers() static may have been reset, so unregister
+    // all known wrappers first.
+    foreach ($this->streamWrappers as $scheme => $type) {
+      $this->unregisterStreamWrapper($scheme, $type);
+    }
+
     $wrappers = &drupal_static('file_get_stream_wrappers', array());
+    if (empty($wrappers)) {
+      return;
+    }
     foreach ($wrappers[STREAM_WRAPPERS_ALL] as $scheme => $info) {
-      stream_wrapper_unregister($scheme);
-      unset($wrappers[STREAM_WRAPPERS_ALL][$scheme]);
-      unset($wrappers[STREAM_WRAPPERS_WRITE_VISIBLE][$scheme]);
-      unset($this->streamWrappers[$scheme]);
+      $this->unregisterStreamWrapper($scheme, $info['type']);
     }
   }
 
