@@ -656,6 +656,12 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
    *   If a module is not enabled after enabling it.
    */
   protected function enableModules(array $modules) {
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+    if ($trace[1]['function'] === 'setUp') {
+      $this->triggerDeprecated('KernelTestBase::enableModules() should not be called from setUp(). Use the $modules property instead.');
+    }
+    unset($trace);
+
     // Set the list of modules in the extension handler.
     $module_handler = $this->container->get('module_handler');
 
