@@ -229,6 +229,9 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       'file_public_path' => $this->siteDirectory . '/files',
       // Disable Twig template caching/dumping.
       'twig_cache' => FALSE,
+      // @todo Remove this.
+      // @see KernelTestBase::register()
+      'queue_default' => 'queue.memory',
     );
     $GLOBALS['config_directories'] = array(
       CONFIG_ACTIVE_DIRECTORY => $this->siteDirectory . '/files/config/active',
@@ -480,6 +483,12 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       ->register('keyvalue.memory', 'Drupal\Core\KeyValueStore\KeyValueMemoryFactory');
     $container
       ->setAlias('keyvalue', 'keyvalue.memory');
+    // @todo Missing QueueMemoryFactory + QueueFactory type hints + no interface.
+    //   Temporarily tampering with Settings instead.
+    $container
+      ->register('queue.memory', 'Drupal\Core\Queue\QueueMemoryFactory');
+//    $container
+//      ->setAlias('queue', 'queue.memory');
 
     if ($container->hasDefinition('path_processor_alias')) {
       // Prevent the alias-based path processor, which requires a url_alias db
