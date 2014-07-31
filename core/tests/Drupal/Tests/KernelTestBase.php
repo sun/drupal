@@ -238,21 +238,10 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       CONFIG_STAGING_DIRECTORY => $this->siteDirectory . '/files/config/staging',
     );
 
-    $databases['default']['default'] = array(
-      'driver' => 'sqlite',
-      'namespace' => 'Drupal\\Core\\Database\\Driver\\sqlite',
-      'host' => '',
-      'database' => ':memory:',
-      'username' => '',
-      'password' => '',
-      'prefix' => array(
-        'default' => '',
-      ),
-    );
     foreach (Database::getAllConnectionInfo() as $key => $targets) {
       Database::removeConnection($key);
     }
-    Database::setMultipleConnectionInfo($databases);
+    Database::setMultipleConnectionInfo($this->getDatabaseConnectionInfo());
 
     // Allow for global test environment overrides.
     if (file_exists($test_env = DRUPAL_ROOT . '/sites/default/testing.services.yml')) {
@@ -342,6 +331,32 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
       // The temporary stream wrapper only depends on the OS temp directory.
       $this->registerStreamWrapper('temporary', 'Drupal\Core\StreamWrapper\TemporaryStream');
     }
+  }
+
+  /**
+   * Returns the Database connection info to be used for a test.
+   *
+   * This method only exists for kernel tests of the Database component itself.
+   * Other tests should not override this method.
+   *
+   * @return array
+   *   A Database connection info array.
+   *
+   * @see \Drupal\Tests\KernelTestBase::setUp()
+   */
+  protected function getDatabaseConnectionInfo() {
+    $databases['default']['default'] = array(
+      'driver' => 'sqlite',
+      'namespace' => 'Drupal\\Core\\Database\\Driver\\sqlite',
+      'host' => '',
+      'database' => ':memory:',
+      'username' => '',
+      'password' => '',
+      'prefix' => array(
+        'default' => '',
+      ),
+    );
+    return $databases;
   }
 
   /**
@@ -676,7 +691,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
     // Write directly to active storage to avoid early instantiation of
     // the event dispatcher which can prevent modules from registering events.
-    $active_storage = \Drupal::service('config.storage');
+    $active_storage = $this->container->get('config.storage');
     $extension_config = $active_storage->read('core.extension');
 
     foreach ($modules as $module) {
