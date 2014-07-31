@@ -26,12 +26,15 @@ class DrupalKernelTest extends DrupalUnitTestBase {
     // since that would distort this test, as it tests DrupalKernel itself.
     $this->bootEnvironment();
 
-    $this->settingsSet('php_storage', array('service_container' => array(
-      'bin' => 'service_container',
-      'class' => 'Drupal\Component\PhpStorage\MTimeProtectedFileStorage',
-      'directory' => $this->siteDirectory . '/php',
-      'secret' => Settings::getHashSalt(),
-    )));
+    $this->setSetting('php_storage', array(
+      'service_container' => array(
+        'bin' => 'service_container',
+        // tempnam() does not work with stream wrappers.
+        'class' => 'Drupal\Component\PhpStorage\FileStorage',
+        'directory' => $this->siteDirectory . '/php',
+        'secret' => Settings::getHashSalt(),
+      ),
+    ));
   }
 
   /**
