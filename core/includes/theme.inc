@@ -459,7 +459,7 @@ function _theme($hook, $variables = array()) {
       // Only log a message when not trying theme suggestions ($hook being an
       // array).
       if (!isset($candidate)) {
-        \Drupal::logger('theme')->warning('Theme hook %hook not found.', array('%hook' => $hook));
+        trigger_error(sprintf("Theme hook %s not found.", $hook), E_USER_ERROR);
       }
       // There is no theme implementation for the hook passed. Return FALSE so
       // the function calling _theme() can differentiate between a hook that
@@ -2468,10 +2468,7 @@ function template_preprocess_field_multiple_value_form(&$variables) {
       t('Order', array(), array('context' => 'Sort order')),
     );
     if (!empty($element['#required'])) {
-      $header[0]['data']['required'] = array(
-        '#theme' => 'form_required_marker',
-        '#element' => $element,
-      );
+      $header[0]['data']['#prefix'] = '<h4 class="label form-required">';
     }
     $rows = array();
 
