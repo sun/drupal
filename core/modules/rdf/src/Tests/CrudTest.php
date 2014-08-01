@@ -23,6 +23,21 @@ class CrudTest extends DrupalUnitTestBase {
    */
   public static $modules = array('entity_test', 'rdf', 'system');
 
+  /**
+   * @var string
+   */
+  private $prefix;
+
+  /**
+   * @var string
+   */
+  private $entity_type;
+
+  /**
+   * @var string
+   */
+  private $bundle;
+
   public function setUp() {
     parent::setUp();
     $this->prefix = 'rdf.mapping';

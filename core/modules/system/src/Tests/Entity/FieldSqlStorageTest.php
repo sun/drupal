@@ -37,6 +37,11 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
   protected $field_name;
 
   /**
+   * @var int
+   */
+  private $field_cardinality;
+
+  /**
    * A field storage to use in this class.
    *
    * @var \Drupal\field\Entity\FieldStorageConfig
@@ -49,6 +54,11 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
    * @var \Drupal\field\Entity\FieldInstanceConfig
    */
   protected $instance;
+
+  /**
+   * @var string
+   */
+  private $table;
 
   /**
    * Name of the revision table of the field.

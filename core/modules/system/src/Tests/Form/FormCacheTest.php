@@ -24,6 +24,21 @@ class FormCacheTest extends DrupalUnitTestBase {
    */
   public static $modules = array('system', 'user');
 
+  /**
+   * @var string
+   */
+  private $form_build_id;
+
+  /**
+   * @var array
+   */
+  private $form;
+
+  /**
+   * @var array
+   */
+  private $form_state;
+
   public function setUp() {
     parent::setUp();
     $this->installSchema('system', array('key_value_expire'));

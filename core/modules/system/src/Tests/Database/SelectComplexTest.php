@@ -322,9 +322,9 @@ class SelectComplexTest extends DatabaseTestBase {
    * Tests that we can join on a query.
    */
   function testJoinSubquery() {
-    $this->enableModules(array('system'), FALSE);
+    $this->enableModules(array('system'));
     $this->installSchema('system', 'sequences');
-    $this->enableModules(array('field', 'user'));
+    $this->enableModules(array('user'));
 
     $account = entity_create('user', array(
       'name' => $this->randomName(),

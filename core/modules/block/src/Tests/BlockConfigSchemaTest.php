@@ -32,6 +32,7 @@ class BlockConfigSchemaTest extends KernelTestBase {
     'forum',
     'node',
     'statistics',
+    'system', // BlockManager->getModuleName() -> system_get_info()
     'taxonomy',
   );
 

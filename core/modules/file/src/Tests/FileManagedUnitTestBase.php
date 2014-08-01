@@ -32,6 +32,8 @@ abstract class FileManagedUnitTestBase extends DrupalUnitTestBase {
     $this->installEntitySchema('file');
     $this->installEntitySchema('user');
     $this->installSchema('file', array('file_usage'));
+    // @todo system_cron() hard-codes database queries operating on 'queue'.
+    $this->installSchema('system', array('queue'));
 
     // Make sure that a user with uid 1 exists, self::createFile() relies on
     // it.

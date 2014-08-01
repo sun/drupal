@@ -21,6 +21,16 @@ class ModuleHandlerTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
+  public static $modules = array('system');
+
+  protected function setUp() {
+    parent::setUp();
+    require_once DRUPAL_ROOT . '/core/includes/install.inc';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function containerBuild(ContainerBuilder $container) {
     parent::containerBuild($container);
     // Put a fake route bumper on the container to be called during uninstall.
@@ -32,24 +42,14 @@ class ModuleHandlerTest extends KernelTestBase {
    * The basic functionality of retrieving enabled modules.
    */
   function testModuleList() {
-    // Build a list of modules, sorted alphabetically.
-    $profile_info = install_profile_info('testing', 'en');
-    $module_list = $profile_info['dependencies'];
+    $module_list = array();
+    $module_list[] = 'system';
 
-    // Installation profile is a module that is expected to be loaded.
-    $module_list[] = 'testing';
-
-    sort($module_list);
-    // Compare this list to the one returned by the module handler. We expect
-    // them to match, since all default profile modules have a weight equal to 0
-    // (except for block.module, which has a lower weight but comes first in
-    // the alphabet anyway).
-    $this->assertModuleList($module_list, 'Testing profile');
+    $this->assertModuleList($module_list, 'Initial');
 
     // Try to install a new module.
     $this->moduleHandler()->install(array('ban'));
-    $module_list[] = 'ban';
-    sort($module_list);
+    array_unshift($module_list, 'ban');
     $this->assertModuleList($module_list, 'After adding a module');
 
     // Try to mess with the module weights.
@@ -80,8 +80,7 @@ class ModuleHandlerTest extends KernelTestBase {
   protected function assertModuleList(Array $expected_values, $condition) {
     $expected_values = array_values(array_unique($expected_values));
     $enabled_modules = array_keys($this->container->get('module_handler')->getModuleList());
-    $enabled_modules = sort($enabled_modules);
-    $this->assertEqual($expected_values, $enabled_modules, format_string('@condition: extension handler returns correct results', array('@condition' => $condition)));
+    $this->assertIdentical($enabled_modules, $expected_values, format_string('@condition: extension handler returns correct results', array('@condition' => $condition)));
   }
 
   /**
