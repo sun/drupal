@@ -7,6 +7,7 @@
 
 namespace Drupal\simpletest\Tests;
 
+use Drupal\simpletest\TestBase;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -16,14 +17,14 @@ use Drupal\Tests\UnitTestCase;
 class TestBaseTest extends UnitTestCase {
 
   /**
-   * A stub built using the TestBase class.
+   * TestBase class stub.
    *
-   * @var \PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\simpletest\TestBase
    */
-  protected $stub;
+  private $stub;
 
   protected function setUp() {
-    $this->stub = $this->getMockForAbstractClass('Drupal\simpletest\TestBase');
+    $this->stub = new StubTestBase(0);
   }
 
   /**
@@ -61,6 +62,17 @@ class TestBaseTest extends UnitTestCase {
   public function testRandomStringValidate($string, $expected) {
     $actual = $this->stub->randomStringValidate($string);
     $this->assertEquals($expected, $actual);
+  }
+
+}
+
+class StubTestBase extends TestBase {
+
+  public function randomStringValidate($string) {
+    return parent::randomStringValidate($string);
+  }
+
+  protected function setUp() {
   }
 
 }
