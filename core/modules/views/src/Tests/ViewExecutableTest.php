@@ -227,10 +227,15 @@ class ViewExecutableTest extends ViewUnitTestBase {
     // Destroy the view, so we can start again and test an invalid display.
     $view->destroy();
 
-    $count_before = count($this->assertions);
-    $view->setDisplay('invalid');
-    $count_after = count($this->assertions);
-    $this->assertTrue($count_after - $count_before, 'Error is triggered while calling the wrong display.');
+    try {
+      $error_triggered = FALSE;
+      $view->setDisplay('invalid');
+    }
+    catch (\PHPUnit_Framework_Error $e) {
+      $error_triggered = TRUE;
+      $this->assertEqual("setDisplay() called with invalid display ID 'invalid'", $e->getMessage());
+    }
+    $this->assertTrue($error_triggered, 'Error is triggered while calling the wrong display.');
 
     $this->assertEqual($view->current_display, 'default', 'If setDisplay is called with an invalid display id the default display should be used.');
     $this->assertEqual(spl_object_hash($view->display_handler), spl_object_hash($view->displayHandlers->get('default')));

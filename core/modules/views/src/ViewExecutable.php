@@ -692,7 +692,7 @@ class ViewExecutable {
 
     // Ensure the requested display exists.
     if (!$this->displayHandlers->has($display_id)) {
-      debug(format_string('setDisplay() called with invalid display ID "@display".', array('@display' => $display_id)));
+      trigger_error(sprintf("setDisplay() called with invalid display ID '%s'", $display_id), E_USER_ERROR);
       return FALSE;
     }
 
