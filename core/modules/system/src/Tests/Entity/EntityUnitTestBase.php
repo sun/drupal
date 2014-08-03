@@ -36,7 +36,7 @@ abstract class EntityUnitTestBase extends DrupalUnitTestBase {
    */
   protected $state;
 
-  public function setUp() {
+  protected function setUp() {
     parent::setUp();
 
     $this->entityManager = $this->container->get('entity.manager');
@@ -48,6 +48,12 @@ abstract class EntityUnitTestBase extends DrupalUnitTestBase {
     $this->installEntitySchema('entity_test');
 
     $this->installConfig(array('field'));
+  }
+
+  protected function tearDown() {
+    $this->entityManager = NULL;
+    $this->state = NULL;
+    parent::tearDown();
   }
 
   /**
