@@ -269,7 +269,7 @@ class DatabaseStorage implements StorageInterface {
    */
   public function listAll($prefix = '') {
     try {
-      return $this->connection->query('SELECT name FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection = :collection AND name LIKE :name', array(
+      return $this->connection->query('SELECT name FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection = :collection AND name LIKE :name ESCAPE \'\\\'', array(
         ':collection' => $this->collection,
         ':name' => $this->connection->escapeLike($prefix) . '%',
       ), $this->options)->fetchCol();
