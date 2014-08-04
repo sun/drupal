@@ -98,6 +98,7 @@ class EntityApiTest extends EntityUnitTestBase {
     $entity = entity_create('entity_test', array('name' => 'test'));
     try {
       $GLOBALS['entity_test_throw_exception'] = TRUE;
+      $this->setExpectedLogMessage(WATCHDOG_ERROR, 'Exception: Entity presave exception in entity_test_entity_presave() %s');
       $entity->save();
       $this->fail('Entity presave EntityStorageException thrown but not caught.');
     }
@@ -119,6 +120,7 @@ class EntityApiTest extends EntityUnitTestBase {
     $entity->save();
     try {
       $GLOBALS['entity_test_throw_exception'] = TRUE;
+      $this->setExpectedLogMessage(WATCHDOG_ERROR, 'Exception: Entity predelete exception in entity_test_entity_predelete() %s');
       $entity->delete();
       $this->fail('Entity predelete EntityStorageException not thrown.');
     }

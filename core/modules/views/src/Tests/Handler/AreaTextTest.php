@@ -54,6 +54,7 @@ class AreaTextTest extends ViewUnitTestBase {
 
     $view->display_handler->handlers['header']['area']->options['format'] = $this->randomString();
     $build = $view->display_handler->handlers['header']['area']->render();
+    $this->setExpectedLogMessage(WATCHDOG_ALERT, 'Missing text format: %s');
     $this->assertEqual('', drupal_render($build), 'Nonexistent format should return empty markup.');
 
     $view->display_handler->handlers['header']['area']->options['format'] = filter_default_format();

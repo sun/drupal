@@ -58,14 +58,17 @@ class DisplayPageTest extends ViewUnitTestBase {
   public function testPageResponses() {
     \Drupal::currentUser()->setAccount(new AnonymousUserSession());
     $subrequest = Request::create('/test_page_display_403', 'GET');
+    $this->setExpectedLogMessage(WATCHDOG_WARNING, 'test_page_display_403');
     $response = $this->container->get('http_kernel')->handle($subrequest, HttpKernelInterface::SUB_REQUEST);
     $this->assertEqual($response->getStatusCode(), 403);
 
     $subrequest = Request::create('/test_page_display_404', 'GET');
+    $this->setExpectedLogMessage(WATCHDOG_WARNING, 'test_page_display_404');
     $response = $this->container->get('http_kernel')->handle($subrequest, HttpKernelInterface::SUB_REQUEST);
     $this->assertEqual($response->getStatusCode(), 404);
 
     $subrequest = Request::create('/test_page_display_200', 'GET');
+    $this->setExpectedLogMessage(WATCHDOG_WARNING, 'test_page_display_200');
     $response = $this->container->get('http_kernel')->handle($subrequest, HttpKernelInterface::SUB_REQUEST);
     $this->assertEqual($response->getStatusCode(), 200);
 
