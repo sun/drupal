@@ -111,16 +111,16 @@ class ConfigFileContentTest extends DrupalUnitTestBase {
     $this->assertNull($config->get('i.dont.exist'), 'Non-existent nested value returned NULL.');
 
     // Read false value.
-    $this->assertEqual($config->get($false_key), '0', format_string("Boolean FALSE value returned the string '0'."));
+    $this->assertIdentical($config->get($false_key), FALSE);
 
     // Read true value.
-    $this->assertEqual($config->get($true_key), '1', format_string("Boolean TRUE value returned the string '1'."));
+    $this->assertIdentical($config->get($true_key), TRUE);
 
     // Read null value.
     $this->assertIdentical($config->get('null'), NULL);
 
     // Read false that had been nested in an array value.
-    $this->assertEqual($config->get($casting_array_false_value_key), '0', format_string("Nested boolean FALSE value returned the string '0'."));
+    $this->assertIdentical($config->get($casting_array_false_value_key), FALSE);
 
     // Unset a top level value.
     $config->clear($key);
