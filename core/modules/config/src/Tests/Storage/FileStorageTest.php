@@ -18,8 +18,8 @@ use Drupal\Core\Config\FileStorage;
 class FileStorageTest extends ConfigStorageTestBase {
   function setUp() {
     parent::setUp();
-    $this->storage = new FileStorage($this->configDirectories[CONFIG_ACTIVE_DIRECTORY]);
-    $this->invalidStorage = new FileStorage($this->configDirectories[CONFIG_ACTIVE_DIRECTORY] . '/nonexisting');
+    $this->storage = new FileStorage(config_get_config_directory());
+    $this->invalidStorage = new FileStorage(config_get_config_directory(CONFIG_ACTIVE_DIRECTORY) . '/nonexisting');
 
     // FileStorage::listAll() requires other configuration data to exist.
     $this->storage->write('system.performance', \Drupal::config('system.performance')->get());
@@ -56,10 +56,12 @@ class FileStorageTest extends ConfigStorageTestBase {
     $this->assertIdentical($config_files, $expected_files, 'Relative path, two config files found.');
 
     // Initialize FileStorage with absolute file path.
-    $absolute_path = realpath($this->configDirectories[CONFIG_ACTIVE_DIRECTORY]);
-    $storage_absolute_path = new FileStorage($absolute_path);
-    $config_files = $storage_absolute_path->listAll();
-    $this->assertIdentical($config_files, $expected_files, 'Absolute path, two config files found.');
+    $absolute_path = realpath(config_get_config_directory());
+    if ($absolute_path) {
+      $storage_absolute_path = new FileStorage($absolute_path);
+      $config_files = $storage_absolute_path->listAll();
+      $this->assertIdentical($config_files, $expected_files, 'Absolute path, two config files found.');
+    }
   }
 
 }
