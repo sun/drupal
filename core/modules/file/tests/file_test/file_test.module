@@ -271,14 +271,29 @@ function file_test_file_url_alter(&$uri) {
       // Public created files.
       else {
         $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
-        $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
+        // Account for (recursive) stream wrapper URIs (like vfsStream).
+        // Drupal does not have a concept to account for the case in which
+        // 'file_public_path' is a stream wrapper URI; it assumes that all
+        // public files are in the local filesystem. For now, since the case
+        // isn't possible on production sites, hard-code the public files
+        // directory of a fake test site, which is a sufficient manipulation
+        // for the corresponding test.
+        $path = $wrapper->getDirectoryPath();
+        if (strpos($path, '://') !== FALSE) {
+          $path = 'sites/test/files';
+        }
+        $path .= '/' . file_uri_target($uri);
       }
 
       // Clean up Windows paths.
       $path = str_replace('\\', '/', $path);
 
       // Generate a root-relative URL.
-      $uri = base_path() . '/' . $path;
+      $base_path = base_path();
+      if ($base_path !== '/') {
+        $base_path = $base_path . '/';
+      }
+      $uri = $base_path . $path;
     }
   }
   // Test alteration of file URLs to use protocol-relative URLs.
@@ -294,14 +309,29 @@ function file_test_file_url_alter(&$uri) {
       // Public created files.
       else {
         $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
-        $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
+        // Account for (recursive) stream wrapper URIs (like vfsStream).
+        // Drupal does not have a concept to account for the case in which
+        // 'file_public_path' is a stream wrapper URI; it assumes that all
+        // public files are in the local filesystem. For now, since the case
+        // isn't possible on production sites, hard-code the public files
+        // directory of a fake test site, which is a sufficient manipulation
+        // for the corresponding test.
+        $path = $wrapper->getDirectoryPath();
+        if (strpos($path, '://') !== FALSE) {
+          $path = 'sites/test/files';
+        }
+        $path .= '/' . file_uri_target($uri);
       }
 
       // Clean up Windows paths.
       $path = str_replace('\\', '/', $path);
 
       // Generate a protocol-relative URL.
-      $uri = '/' . base_path() . '/' . $path;
+      $base_path = base_path();
+      if ($base_path !== '/') {
+        $base_path = $base_path . '/';
+      }
+      $uri = '/' . $base_path . $path;
     }
   }
 }
