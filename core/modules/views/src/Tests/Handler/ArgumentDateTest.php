@@ -163,15 +163,20 @@ class ArgumentDateTest extends ViewUnitTestBase {
       ->execute();
 
     $view = Views::getView('test_argument_date');
-    $view->setDisplay('embed_3');
-    // The first jan 2000 was still in the last week of the previous year.
-    $this->executeView($view, array(52));
-    $expected = array();
-    $expected[] = array('id' => 1);
-    $expected[] = array('id' => 2);
-    $expected[] = array('id' => 3);
-    $this->assertIdenticalResultset($view, $expected, $this->columnMap);
-    $view->destroy();
+
+    // SQLite does not support advanced date operations (such as interpreting
+    // 2000-01-01 as the 52nd week of 1999).
+    if ($this->container->get('database')->driver() !== 'sqlite') {
+      $view->setDisplay('embed_3');
+      // The first jan 2000 was still in the last week of the previous year.
+      $this->executeView($view, array(52));
+      $expected = array();
+      $expected[] = array('id' => 1);
+      $expected[] = array('id' => 2);
+      $expected[] = array('id' => 3);
+      $this->assertIdenticalResultset($view, $expected, $this->columnMap);
+      $view->destroy();
+    }
 
     $view->setDisplay('embed_3');
     $this->executeView($view, array('02'));

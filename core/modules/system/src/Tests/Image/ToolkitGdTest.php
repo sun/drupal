@@ -267,7 +267,7 @@ class ToolkitGdTest extends DrupalUnitTestBase {
           $correct_dimensions_object = FALSE;
         }
 
-        $directory = $this->public_files_directory .'/imagetest';
+        $directory = $this->siteDirectory . '/files/imagetest';
         file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
         $file_path = $directory . '/' . $op . image_type_to_extension($image->getToolkit()->getType());
         $image->save($file_path);
@@ -328,6 +328,7 @@ class ToolkitGdTest extends DrupalUnitTestBase {
     }
 
     // Try perform a missing toolkit operation.
+    $this->setExpectedLogMessage(WATCHDOG_ERROR, "The selected image handling toolkit 'gd' can not process operation 'missing_op'.");
     $this->assertFalse($image->apply('missing_op', array()), 'Calling a missing image toolkit operation plugin fails.');
   }
 

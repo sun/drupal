@@ -30,8 +30,8 @@ class DirectoryTest extends FileTestBase {
     $old_mode = fileperms($directory);
 
     // Create the directories.
-    $parent_path = $directory . DIRECTORY_SEPARATOR . $parent;
-    $child_path = $parent_path . DIRECTORY_SEPARATOR . $child;
+    $parent_path = $directory . '/' . $parent;
+    $child_path = $parent_path . '/' . $child;
     $this->assertTrue(drupal_mkdir($child_path, 0775, TRUE), t('No error reported when creating new local directories.'), 'File');
 
     // Ensure new directories also exist.
@@ -46,9 +46,11 @@ class DirectoryTest extends FileTestBase {
     $this->assertDirectoryPermissions($directory, $old_mode);
 
     // Check creating a directory using an absolute path.
-    $absolute_path = drupal_realpath($directory) . DIRECTORY_SEPARATOR . $this->randomMachineName() . DIRECTORY_SEPARATOR . $this->randomMachineName();
-    $this->assertTrue(drupal_mkdir($absolute_path, 0775, TRUE), 'No error reported when creating new absolute directories.', 'File');
-    $this->assertDirectoryPermissions($absolute_path, 0775);
+    if ($absolute_path = drupal_realpath($directory)) {
+      $absolute_path = $absolute_path . '/' . $this->randomMachineName() . '/' . $this->randomMachineName();
+      $this->assertTrue(drupal_mkdir($absolute_path, 0775, TRUE), 'No error reported when creating new absolute directories.', 'File');
+      $this->assertDirectoryPermissions($absolute_path, 0775);
+    }
   }
 
   /**
@@ -68,7 +70,7 @@ class DirectoryTest extends FileTestBase {
     // Make sure directory actually exists.
     $this->assertTrue(is_dir($directory), 'Directory actually exists.', 'File');
 
-    if (substr(PHP_OS, 0, 3) != 'WIN') {
+    if (substr(PHP_OS, 0, 3) != 'WIN' || !realpath($directory)) {
       // PHP on Windows doesn't support any kind of useful read-only mode for
       // directories. When executing a chmod() on a directory, PHP only sets the
       // read-only flag, which doesn't prevent files to actually be written
@@ -79,7 +81,7 @@ class DirectoryTest extends FileTestBase {
       $this->assertFalse(file_prepare_directory($directory, 0), 'Error reported for a non-writeable directory.', 'File');
 
       // Test directory permission modification.
-      $this->settingsSet('file_chmod_directory', 0777);
+      $this->setSetting('file_chmod_directory', 0777);
       $this->assertTrue(file_prepare_directory($directory, FILE_MODIFY_PERMISSIONS), 'No error reported when making directory writeable.', 'File');
     }
 

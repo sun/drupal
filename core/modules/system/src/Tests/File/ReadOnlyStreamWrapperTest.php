@@ -56,6 +56,7 @@ class ReadOnlyStreamWrapperTest extends FileTestBase {
     $handle = fopen($uri, 'r');
     $this->assertTrue($handle, 'Able to open a file for reading with the read-only stream wrapper.');
     // Attempt to change file permissions
+    $this->setExpectedLogMessage(WATCHDOG_ERROR, 'The file permissions could not be set on dummy-readonly://%s');
     $this->assertFalse(@drupal_chmod($uri, 0777), 'Unable to change file permissions when using read-only stream wrapper.');
     // Attempt to acquire an exclusive lock for writing
     $this->assertFalse(@flock($handle, LOCK_EX | LOCK_NB), 'Unable to acquire an exclusive lock using the read-only stream wrapper.');

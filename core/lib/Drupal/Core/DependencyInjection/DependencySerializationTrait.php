@@ -49,9 +49,10 @@ trait DependencySerializationTrait {
    * {@inheritdoc}
    */
   public function __wakeup() {
-    $container = \Drupal::getContainer();
-    foreach ($this->_serviceIds as $key => $service_id) {
-      $this->$key = $container->get($service_id);
+    if ($container = \Drupal::getContainer()) {
+      foreach ($this->_serviceIds as $key => $service_id) {
+        $this->$key = $container->get($service_id);
+      }
     }
     $this->_serviceIds = array();
   }

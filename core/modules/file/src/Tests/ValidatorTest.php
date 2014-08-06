@@ -13,6 +13,17 @@ namespace Drupal\file\Tests;
  * @group file
  */
 class ValidatorTest extends FileManagedUnitTestBase {
+
+  /**
+   * @var \Drupal\file\Entity\File
+   */
+  protected $image;
+
+  /**
+   * @var \Drupal\file\Entity\File
+   */
+  protected $non_image;
+
   function setUp() {
     parent::setUp();
 
@@ -88,6 +99,7 @@ class ValidatorTest extends FileManagedUnitTestBase {
       // Once again, now with negative width and height to force an error.
       copy('core/misc/druplicon.png', 'temporary://druplicon.png');
       $this->image->setFileUri('temporary://druplicon.png');
+      $this->setExpectedLogMessage(WATCHDOG_WARNING, "Invalid width (%i) specified for the image 'scale' operation");
       $errors = file_validate_image_resolution($this->image, '-10x-5');
       $this->assertEqual(count($errors), 1, 'An error reported for an oversized image that can not be scaled down.', 'File');
 

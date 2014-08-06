@@ -41,6 +41,7 @@ class UnmanagedDeleteTest extends FileTestBase {
     $directory = $this->createDirectory();
 
     // Try to delete a directory
+    $this->setExpectedLogMessage(WATCHDOG_ERROR, $this->scheme . '%s is a directory and cannot be removed using file_unmanaged_delete().');
     $this->assertFalse(file_unmanaged_delete($directory), 'Could not delete the delete directory.');
     $this->assertTrue(file_exists($directory), 'Directory has not been deleted.');
   }

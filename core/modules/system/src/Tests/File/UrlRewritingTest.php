@@ -29,6 +29,10 @@ class UrlRewritingTest extends FileTestBase {
   function testShippedFileURL()  {
     // Test generating an URL to a shipped file (i.e. a file that is part of
     // Drupal core, a module or a theme, for example a JavaScript file).
+    $base_path = base_path();
+    if ($base_path !== '/') {
+      $base_path .= '/';
+    }
 
     // Test alteration of file URLs to use a CDN.
     \Drupal::state()->set('file_test.hook_file_url_alter', 'cdn');
@@ -43,19 +47,19 @@ class UrlRewritingTest extends FileTestBase {
     \Drupal::state()->set('file_test.hook_file_url_alter', 'root-relative');
     $filepath = 'core/assets/vendor/jquery/jquery.js';
     $url = file_create_url($filepath);
-    $this->assertEqual(base_path() . '/' . $filepath, $url, 'Correctly generated a root-relative URL for a shipped file.');
+    $this->assertEqual($base_path . $filepath, $url, 'Correctly generated a root-relative URL for a shipped file.');
     $filepath = 'core/misc/favicon.ico';
     $url = file_create_url($filepath);
-    $this->assertEqual(base_path() . '/' . $filepath, $url, 'Correctly generated a root-relative URL for a shipped file.');
+    $this->assertEqual($base_path . $filepath, $url, 'Correctly generated a root-relative URL for a shipped file.');
 
     // Test alteration of file URLs to use protocol-relative URLs.
     \Drupal::state()->set('file_test.hook_file_url_alter', 'protocol-relative');
     $filepath = 'core/assets/vendor/jquery/jquery.js';
     $url = file_create_url($filepath);
-    $this->assertEqual('/' . base_path() . '/' . $filepath, $url, 'Correctly generated a protocol-relative URL for a shipped file.');
+    $this->assertEqual('/' . $base_path . $filepath, $url, 'Correctly generated a protocol-relative URL for a shipped file.');
     $filepath = 'core/misc/favicon.ico';
     $url = file_create_url($filepath);
-    $this->assertEqual('/' . base_path() . '/' . $filepath, $url, 'Correctly generated a protocol-relative URL for a shipped file.');
+    $this->assertEqual('/' . $base_path . $filepath, $url, 'Correctly generated a protocol-relative URL for a shipped file.');
   }
 
   /**
@@ -75,13 +79,23 @@ class UrlRewritingTest extends FileTestBase {
     \Drupal::state()->set('file_test.hook_file_url_alter', 'root-relative');
     $uri = $this->createUri();
     $url = file_create_url($uri);
-    $this->assertEqual(base_path() . '/' . $public_directory_path . '/' . drupal_basename($uri), $url, 'Correctly generated a root-relative URL for a created file.');
+    if (realpath($public_directory_path)) {
+      $this->assertEqual(base_path() . '/' . $public_directory_path . '/' . drupal_basename($uri), $url, 'Correctly generated a root-relative URL for a created file.');
+    }
+    else {
+      $this->assertEqual('/sites/test/files/' . drupal_basename($uri), $url, 'Correctly generated a root-relative URL for a created file.');
+    }
 
     // Test alteration of file URLs to use a protocol-relative URLs.
     \Drupal::state()->set('file_test.hook_file_url_alter', 'protocol-relative');
     $uri = $this->createUri();
     $url = file_create_url($uri);
-    $this->assertEqual('/' . base_path() . '/' . $public_directory_path . '/' . drupal_basename($uri), $url, 'Correctly generated a protocol-relative URL for a created file.');
+    if (realpath($public_directory_path)) {
+      $this->assertEqual('/' . base_path() . '/' . $public_directory_path . '/' . drupal_basename($uri), $url, 'Correctly generated a protocol-relative URL for a created file.');
+    }
+    else {
+      $this->assertEqual('//sites/test/files/' . drupal_basename($uri), $url, 'Correctly generated a protocol-relative URL for a created file.');
+    }
   }
 
   /**

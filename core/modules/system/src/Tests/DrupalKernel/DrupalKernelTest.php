@@ -16,30 +16,25 @@ use Symfony\Component\HttpFoundation\Request;
  * Tests DIC compilation to disk.
  *
  * @group DrupalKernel
+ * @runTestsInSeparateProcesses
  */
 class DrupalKernelTest extends DrupalUnitTestBase {
 
-  /**
-   * @var \Composer\Autoload\ClassLoader
-   */
-  protected $classloader;
+  protected function setUp() {
+    // DrupalKernel requires config directories to exist. Therefore, boot the
+    // base test environment, but do not invoke KernelTestBase::bootKernel(),
+    // since that would distort this test, as it tests DrupalKernel itself.
+    $this->bootEnvironment();
 
-  function setUp() {
-    // DrupalKernel relies on global $config_directories and requires those
-    // directories to exist. Therefore, create the directories, but do not
-    // invoke KernelTestBase::setUp(), since that would set up further
-    // environment aspects, which would distort this test, because it tests
-    // the DrupalKernel (re-)building itself.
-    $this->prepareConfigDirectories();
-
-    $this->settingsSet('php_storage', array('service_container' => array(
-      'bin' => 'service_container',
-      'class' => 'Drupal\Component\PhpStorage\MTimeProtectedFileStorage',
-      'directory' => DRUPAL_ROOT . '/' . $this->public_files_directory . '/php',
-      'secret' => Settings::getHashSalt(),
-    )));
-
-    $this->classloader = drupal_classloader();
+    $this->setSetting('php_storage', array(
+      'service_container' => array(
+        'bin' => 'service_container',
+        // tempnam() does not work with stream wrappers.
+        'class' => 'Drupal\Component\PhpStorage\FileStorage',
+        'directory' => $this->siteDirectory . '/php',
+        'secret' => Settings::getHashSalt(),
+      ),
+    ));
   }
 
   /**
@@ -59,8 +54,8 @@ class DrupalKernelTest extends DrupalUnitTestBase {
    */
   protected function getTestKernel(Request $request, array $modules_enabled = NULL, $read_only = FALSE) {
     // Manually create kernel to avoid replacing settings.
-    $kernel = DrupalKernel::createFromRequest($request, drupal_classloader(), 'testing');
-    $this->settingsSet('hash_salt', $this->databasePrefix);
+    $kernel = new DrupalKernel('testing', $this->classLoader);
+    $kernel->setSitePath($this->siteDirectory);
     if (isset($modules_enabled)) {
       $kernel->updateModules($modules_enabled);
     }
@@ -69,7 +64,7 @@ class DrupalKernelTest extends DrupalUnitTestBase {
     if ($read_only) {
       $php_storage = Settings::get('php_storage');
       $php_storage['service_container']['class'] = 'Drupal\Component\PhpStorage\FileReadOnlyStorage';
-      $this->settingsSet('php_storage', $php_storage);
+      $this->setSetting('php_storage', $php_storage);
     }
     return $kernel;
   }

@@ -7,6 +7,13 @@
 
 namespace Drupal\simpletest;
 
+use Drupal\Tests\KernelTestBase as KernelTestBaseNG;
+
+abstract class KernelTestBase extends KernelTestBaseNG {
+}
+
+namespace Drupal\simpletest\Gone;
+
 use Drupal\Component\Utility\String;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -15,6 +22,8 @@ use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Entity\Schema\EntitySchemaProviderInterface;
+use Drupal\simpletest\AssertContentTrait;
+use Drupal\simpletest\UnitTestBase;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
 

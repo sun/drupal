@@ -16,6 +16,17 @@ use Drupal\Core\Cache\PhpBackend;
  */
 class PhpBackendUnitTest extends GenericCacheBackendUnitTestBase {
 
+  protected function setUp() {
+    parent::setUp();
+
+    $this->setSetting('php_storage', array(
+      'default' => array(
+        // tempnam() does not work with stream wrappers.
+        'class' => 'Drupal\Component\PhpStorage\FileStorage',
+      ),
+    ));
+  }
+
   /**
    * Creates a new instance of MemoryBackend.
    *

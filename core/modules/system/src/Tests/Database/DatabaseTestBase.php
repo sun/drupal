@@ -7,6 +7,7 @@
 
 namespace Drupal\system\Tests\Database;
 
+use Drupal\Core\Database\Database;
 use Drupal\simpletest\DrupalUnitTestBase;
 
 /**
@@ -18,6 +19,11 @@ use Drupal\simpletest\DrupalUnitTestBase;
 abstract class DatabaseTestBase extends DrupalUnitTestBase {
 
   public static $modules = array('database_test');
+
+  /**
+   * @var string
+   */
+  protected $sqliteDb;
 
   function setUp() {
     parent::setUp();
@@ -32,6 +38,37 @@ abstract class DatabaseTestBase extends DrupalUnitTestBase {
       'test_serialized',
     ));
     self::addSampleData();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * - SQLite :memory: creates a new database for each connection.
+   * - PHP's SQLite extension does not support stream wrappers.
+   * - Shared in-memory database DSNs trigger open_basedir restrictions.
+   *
+   * Therefore, create a real database file on disk.
+   *
+   * @see http://www.sqlite.org/inmemorydb.html
+   * @see https://bugs.php.net/bug.php?id=55154
+   */
+  protected function getDatabaseConnectionInfo() {
+    $this->sqliteDb = tempnam(sys_get_temp_dir(), 'sql');
+
+    $databases['default']['default'] = array(
+      'driver' => 'sqlite',
+      'namespace' => 'Drupal\\Core\\Database\\Driver\\sqlite',
+      'database' => $this->sqliteDb,
+    );
+    return $databases;
+  }
+
+  protected function tearDown() {
+    // Tear down all database connections and the container first.
+    parent::tearDown();
+    // Permission denied on Windows.
+    @unlink($this->sqliteDb);
+    unset($this->sqliteDb);
   }
 
   /**
