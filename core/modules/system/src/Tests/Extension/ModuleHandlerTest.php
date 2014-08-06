@@ -171,7 +171,7 @@ class ModuleHandlerTest extends KernelTestBase {
   function testUninstallProfileDependency() {
     $profile = 'minimal';
     $dependency = 'dblog';
-    $this->settingsSet('install_profile', $profile);
+    $this->setSetting('install_profile', $profile);
     $this->enableModules(array('module_test', $profile));
 
     drupal_static_reset('system_rebuild_module_data');

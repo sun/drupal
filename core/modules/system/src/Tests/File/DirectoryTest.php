@@ -81,7 +81,7 @@ class DirectoryTest extends FileTestBase {
       $this->assertFalse(file_prepare_directory($directory, 0), 'Error reported for a non-writeable directory.', 'File');
 
       // Test directory permission modification.
-      $this->settingsSet('file_chmod_directory', 0777);
+      $this->setSetting('file_chmod_directory', 0777);
       $this->assertTrue(file_prepare_directory($directory, FILE_MODIFY_PERMISSIONS), 'No error reported when making directory writeable.', 'File');
     }
 

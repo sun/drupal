@@ -200,7 +200,7 @@ class ConfigFileContentTest extends DrupalUnitTestBase {
     );
 
     // Encode and write, and reload and decode the configuration data.
-    $filestorage = new FileStorage($this->configDirectories[CONFIG_ACTIVE_DIRECTORY]);
+    $filestorage = new FileStorage(config_get_config_directory());
     $filestorage->write($name, $config_data);
     $config_parsed = $filestorage->read($name);
 
