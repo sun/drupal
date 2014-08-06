@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.4
+
+before_script:
+  #- composer self-update
+  # Enable APC extension on PHP 5.4.
+  - echo -e "extension = apc.so\napc.enable_cli = 1\napc.shm_size = 128M\napc.num_files_hint = 7000" > apc.ini
+  - '[ `expr "$TRAVIS_PHP_VERSION" "<" "5.5"` -eq 1 ] && phpenv config-add apc.ini'
+
+script:
+  - phpunit -v -c core --testsuite Unit
+  # Disable XDebug after running unit tests.
+  - phpenv config-rm xdebug.ini
+  - php --version
+  # @todo Update to PHPUnit 4.3 (once released).
+  - ./core/vendor/phpunit/phpunit/phpunit -v -c core --testsuite Kernel

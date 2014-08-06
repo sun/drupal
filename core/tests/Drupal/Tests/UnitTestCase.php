@@ -27,6 +27,29 @@ abstract class UnitTestCase extends \PHPUnit_Framework_TestCase {
   protected $randomGenerator;
 
   /**
+   * If a test requests process isolation, do not backup state.
+   *
+   * @var bool
+   */
+  protected $preserveGlobalState = FALSE;
+
+  /**
+   * {@inheritdoc}
+   *
+   * Fixes missing invocation of bootstrap.php when $preserveGlobalState is
+   * FALSE.
+   *
+   * @see https://github.com/sebastianbergmann/phpunit/pull/797
+   */
+  protected function prepareTemplate(\Text_Template $template) {
+    $template->setVar(array(
+      'constants' => '',
+      'included_files' => '',
+      'globals' => '$GLOBALS[\'__PHPUNIT_BOOTSTRAP\'] = ' . var_export($GLOBALS['__PHPUNIT_BOOTSTRAP'], TRUE) . ";\n",
+    ));
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
