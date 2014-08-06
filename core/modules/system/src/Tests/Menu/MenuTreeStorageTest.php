@@ -317,7 +317,7 @@ class MenuTreeStorageTest extends KernelTestBase {
       $this->pass($msg);
     }
     $this->addMenuLink(1);
-    $properties = array(array('menu_name' => 'tools'));
+    $properties = array('menu_name' => 'tools');
     $links = $this->treeStorage->loadByProperties($properties);
     $this->assertEqual('tools', $links[1]['menu_name']);
   }
