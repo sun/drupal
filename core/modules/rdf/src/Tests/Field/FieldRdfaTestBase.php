@@ -43,14 +43,19 @@ abstract class FieldRdfaTestBase extends FieldUnitTestBase {
    *
    * @var bool
    */
-  protected $debug = TRUE;
+  protected $debug = FALSE;
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = array('rdf', 'menu_link');
+  public static $modules = array('rdf');
+
+  /**
+   * @var string
+   */
+  protected $testValue;
 
   /**
    * {@inheritdoc}

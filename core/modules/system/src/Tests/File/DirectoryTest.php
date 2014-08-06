@@ -30,8 +30,8 @@ class DirectoryTest extends FileTestBase {
     $old_mode = fileperms($directory);
 
     // Create the directories.
-    $parent_path = $directory . DIRECTORY_SEPARATOR . $parent;
-    $child_path = $parent_path . DIRECTORY_SEPARATOR . $child;
+    $parent_path = $directory . '/' . $parent;
+    $child_path = $parent_path . '/' . $child;
     $this->assertTrue(drupal_mkdir($child_path, 0775, TRUE), t('No error reported when creating new local directories.'), 'File');
 
     // Ensure new directories also exist.
@@ -46,7 +46,7 @@ class DirectoryTest extends FileTestBase {
     $this->assertDirectoryPermissions($directory, $old_mode);
 
     // Check creating a directory using an absolute path.
-    $absolute_path = drupal_realpath($directory) . DIRECTORY_SEPARATOR . $this->randomMachineName() . DIRECTORY_SEPARATOR . $this->randomMachineName();
+    $absolute_path = drupal_realpath($directory) . '/' . $this->randomMachineName() . '/' . $this->randomMachineName();
     $this->assertTrue(drupal_mkdir($absolute_path, 0775, TRUE), 'No error reported when creating new absolute directories.', 'File');
     $this->assertDirectoryPermissions($absolute_path, 0775);
   }
