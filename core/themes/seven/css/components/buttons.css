@@ -30,9 +30,9 @@
   cursor: pointer;
   -webkit-appearance: none;  /* 3 */
   -moz-appearance: none;  /* 3 */
-  padding: 4px 1.5em;  /* 4 */
+  padding: 8px 2.5em;  /* 4 */
   border: 1px solid #a6a6a6;
-  border-radius: 20em;
+  border-radius: 4px;
   background-color: #f2f1eb;
   background-image: -webkit-linear-gradient(top, #f6f6f3, #e7e7df);
   background-image: linear-gradient(to bottom, #f6f6f3, #e7e7df);
@@ -41,7 +41,7 @@
   text-shadow: 0 1px hsla(0, 0%, 100%, 0.6);
   font-weight: 600;
   font-size: 14px;
-  font-size: 0.875rem;  /* 5 */
+  font-size: 1rem;  /* 5 */
   -webkit-transition: all 0.1s;
   transition: all 0.1s;
   -webkit-font-smoothing: antialiased;  /* 6 */

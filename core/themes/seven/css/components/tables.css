@@ -21,8 +21,7 @@ th {
   text-align: right;
 }
 thead th {
-  background: #f5f5f2;
-  border: solid #bfbfba;
+  border: 0px solid #bfbfba;
   border-width: 1px 0;
   color: #333;
   text-transform: uppercase;
@@ -36,7 +35,6 @@ thead > tr {
 }
 tbody tr:hover,
 tbody tr:focus {
-  background: #f7fcff;
 }
 /* See colors.css */
 tbody tr.color-warning:hover,

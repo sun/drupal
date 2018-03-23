@@ -71,15 +71,12 @@ label.option {
   color: #e00;
 }
 .form-required:after {
-  content: '';
-  vertical-align: super;
-  display: inline-block;
+  content: '(required)';
+  font-weight: normal;
+  color: #8b8b8b;
+  
+  
   /* Use a background image to prevent screen readers from announcing the text. */
-  background-image: url(../../../../misc/icons/ee0000/required.svg);
-  background-repeat: no-repeat;
-  background-size: 6px 6px;
-  width: 6px;
-  height: 6px;
   margin: 0 0.3em;
 }
 abbr.tabledrag-changed,

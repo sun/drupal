@@ -12,10 +12,10 @@
 }
 
 .filter-wrapper {
-  border: 1px solid #ccc;
-  border-top: 0;
+  /* border: 1px solid #ccc; */
+  /* border-top: 0; */
   margin: 0;
-  padding: 0.5em 0.666em;
+  padding: 0.5em 0;
   overflow: hidden;
 }
 .filter-wrapper .form-item {

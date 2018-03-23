@@ -11,6 +11,15 @@ button.link {
   padding: 0;
   font-size: 1em;
 }
+label > span.field-edit-link,
 label button.link {
-  font-weight: bold;
+  font-weight: normal;
+}
+/* Remove parenthesis around quick-edit link. */
+label > span.field-edit-link {
+  font-size: 0;
+}
+label button.link {
+  margin-left: 0.6em;
+  font-size: 13px;
 }
